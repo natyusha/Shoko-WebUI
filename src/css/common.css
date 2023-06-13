@@ -124,7 +124,7 @@ body {
   border: 1px solid theme('colors.background-border') !important;
   border-radius: 5px !important;
   color: theme('colors.font-main') !important;
-  font-family: Sora, sans, serif, mono !important;
+  font-family: Metropolis, sans, serif, mono !important;
 }
 
 /* stylelint-disable-next-line selector-class-pattern */

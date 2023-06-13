@@ -33,7 +33,7 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        'sans': ['Sora', ...defaultTheme.fontFamily.sans],
+        'sans': ['Metropolis', ...defaultTheme.fontFamily.sans],
       },
       fontWeight: {
         extralight: 100,

@@ -1096,10 +1096,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fontsource/sora@npm:^5.0.2":
-  version: 5.0.2
-  resolution: "@fontsource/sora@npm:5.0.2"
-  checksum: 65fbf8160fdb7aecf4b86bc0176492b59a5929ec7f6ab739f79a60a7c6d4a5db6f9260feecace2dfd484774c417cf775ad5b2de9c68496ee710b8db11834176a
+"@fontsource/metropolis@npm:^5.0.3":
+  version: 5.0.3
+  resolution: "@fontsource/metropolis@npm:5.0.3"
+  checksum: e2892cc0f9600c6ee38d66c3525e9c5bdbaa112f7da5bc9f3a25ea27bb5e556a27dd7210d348649e1ff5dfd0fa7c63f9f4505847b7d8c30e5b9099def3fee9c4
   languageName: node
   linkType: hard
 
@@ -7530,7 +7530,7 @@ fsevents@~2.3.2:
   version: 0.0.0-use.local
   resolution: "shoko-webui@workspace:."
   dependencies:
-    "@fontsource/sora": ^5.0.2
+    "@fontsource/metropolis": ^5.0.3
     "@headlessui/react": ^1.7.15
     "@headlessui/tailwindcss": ^0.1.3
     "@mdi/js": ^7.2.96

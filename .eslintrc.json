@@ -4,7 +4,8 @@
     "airbnb-typescript",
     "airbnb/hooks",
     "plugin:tailwindcss/recommended",
-    "plugin:@typescript-eslint/recommended"
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-type-checked"
   ],
   "ignorePatterns": [
     "/*",

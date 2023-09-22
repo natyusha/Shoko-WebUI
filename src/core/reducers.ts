@@ -14,6 +14,10 @@ import miscReducer from './slices/misc';
 import modalsReducer from './slices/modals';
 import utilitiesReducer from './slices/utilities';
 
+import type { MainpageActionTypes } from './slices/mainpage';
+import type { AvdumpActionTypes } from '@/core/slices/utilities/avdump';
+import type { SliceActions } from '@/core/types/util';
+
 const reducers = combineReducers({
   apiSession: apiSessionReducer,
   fetching: fetchingReducer,
@@ -29,5 +33,9 @@ const reducers = combineReducers({
   [splitV3Api.reducerPath]: splitV3Api.reducer,
   [plexApi.reducerPath]: plexApi.reducer,
 });
+
+type SplitV3ApiActionTypes = SliceActions<Pick<typeof splitV3Api.util, 'invalidateTags'>>;
+export type ActionTypes = MainpageActionTypes | AvdumpActionTypes | SplitV3ApiActionTypes;
+export type DispatchType = (arg0: ActionTypes) => void;
 
 export default reducers;

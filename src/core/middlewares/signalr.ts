@@ -1,11 +1,5 @@
 /* dprint-ignore-file */
-import {
-  HttpTransportType,
-  type HubConnection,
-  HubConnectionBuilder,
-  JsonHubProtocol,
-  LogLevel,
-} from '@microsoft/signalr';
+import { HttpTransportType, type HubConnection, HubConnectionBuilder, JsonHubProtocol, LogLevel, } from '@microsoft/signalr';
 import { debounce, defer, delay, forEach, round } from 'lodash';
 import moment from 'moment';
 
@@ -15,7 +9,8 @@ import { setFetched, setHttpBanStatus, setNetworkStatus, setQueueStatus, setUdpB
 import { restoreAVDumpSessions, updateAVDumpEvent } from '@/core/slices/utilities/avdump';
 import { AVDumpEventTypeEnum } from '@/core/types/signalr';
 
-import type { AVDumpEventType, AVDumpRestoreType, AniDBBanItemType, NetworkAvailability } from '@/core/types/signalr';
+import type { DispatchType } from '@/core/reducers';
+import type { AniDBBanItemType, AVDumpEventType, AVDumpRestoreType, NetworkAvailability, QueueNameType, SignalRQueueType } from '@/core/types/signalr';
 
 let lastRetry = moment();
 let attempts = 0;
@@ -25,12 +20,12 @@ let connectionEvents: HubConnection;
 
 // Queue Events
 
-const onQueueStateChange = dispatch => (queue, state) => {
+const onQueueStateChange = (dispatch: DispatchType) => (queue: QueueNameType, state: SignalRQueueType) => {
   const newState = Object.assign({}, { [queue]: state });
   dispatch(setQueueStatus(newState));
 };
 
-const onQueueConnected = dispatch => (state) => {
+const onQueueConnected = (dispatch: DispatchType) => (state: SignalRQueueType) => {
   const fixedState = {};
   forEach(state, (item, key) => {
     const letter = key.substr(0, 1);
@@ -48,32 +43,32 @@ const onQueueConnected = dispatch => (state) => {
 
 // AniDB Events
 
-const onAniDBConnected = dispatch => (state: AniDBBanItemType[]) => {
+const onAniDBConnected = (dispatch: DispatchType) => (state: AniDBBanItemType[]) => {
   dispatch(setUdpBanStatus(state[0]));
   dispatch(setHttpBanStatus(state[1]));
 };
 
-const onAniDBUDPStateUpdate = dispatch => (state: AniDBBanItemType) => {
+const onAniDBUDPStateUpdate = (dispatch: DispatchType) => (state: AniDBBanItemType) => {
   dispatch(setUdpBanStatus(state));
 };
 
-const onAniDBHttpStateUpdate = dispatch => (state: AniDBBanItemType) => {
+const onAniDBHttpStateUpdate = (dispatch: DispatchType) => (state: AniDBBanItemType) => {
   dispatch(setHttpBanStatus(state));
 };
 
 // Network Events
 
-const onNetworkChanged = dispatch => ({ networkAvailability }: { networkAvailability: NetworkAvailability }) => {
+const onNetworkChanged = (dispatch: DispatchType) => ({ networkAvailability }: { networkAvailability: NetworkAvailability }) => {
   dispatch(setNetworkStatus(networkAvailability));
 };
 
 // AVDump Events
 
-const onAvDumpConnected = dispatch => (state: AVDumpRestoreType[]) => {
+const onAvDumpConnected = (dispatch: DispatchType) => (state: AVDumpRestoreType[]) => {
   dispatch(restoreAVDumpSessions(state));
 };
 
-const onAvDumpEvent = dispatch => (event: AVDumpEventType) => {
+const onAvDumpEvent = (dispatch: DispatchType) => (event: AVDumpEventType) => {
   switch (event.type) {
     case AVDumpEventTypeEnum.Started:
     case AVDumpEventTypeEnum.Success:
@@ -90,23 +85,23 @@ const onAvDumpEvent = dispatch => (event: AVDumpEventType) => {
 
 // Shoko Events
 
-const onFileDeleted = dispatch => () => {
+const onFileDeleted = (dispatch: DispatchType) => () => {
   dispatch(splitV3Api.util.invalidateTags(['FileDeleted']));
 };
 
-const onFileHashed = dispatch => () => {
+const onFileHashed = (dispatch: DispatchType) => () => {
   dispatch(splitV3Api.util.invalidateTags(['FileHashed']));
 };
 
-const onFileMatched = dispatch => () => {
+const onFileMatched = (dispatch: DispatchType) => () => {
   dispatch(splitV3Api.util.invalidateTags(['FileMatched']));
 };
 
-const onSeriesUpdated = dispatch => () => {
+const onSeriesUpdated = (dispatch: DispatchType) => () => {
   dispatch(splitV3Api.util.invalidateTags(['SeriesUpdated']));
 };
 
-const onEpisodeUpdated = dispatch => () => {
+const onEpisodeUpdated = (dispatch: DispatchType) => () => {
   dispatch(splitV3Api.util.invalidateTags(['EpisodeUpdated']));
 };
 

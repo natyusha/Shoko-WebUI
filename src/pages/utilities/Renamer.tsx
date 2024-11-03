@@ -38,7 +38,7 @@ import {
   useRenamerRelocateMutation,
   useRenamerSaveConfigMutation,
 } from '@/core/react-query/renamer/mutations';
-import { useRenamerByConfigQuery, useRenamerConfigsQuery } from '@/core/react-query/renamer/queries';
+import { useRenamerByConfigQuery, useRenamerConfigsQuery, useRenamersQuery } from '@/core/react-query/renamer/queries';
 import { usePatchSettingsMutation } from '@/core/react-query/settings/mutations';
 import { useSettingsQuery } from '@/core/react-query/settings/queries';
 import { clearFiles, clearRenameResults, removeFiles } from '@/core/slices/utilities/renamer';
@@ -268,6 +268,30 @@ const Menu = React.memo((props: MenuProps) => {
   );
 });
 
+const ConfigOption = React.memo(({ config }: { config: RenamerConfigType }) => {
+  const renamersQuery = useRenamersQuery();
+
+  const currentRenamer = useMemo(
+    () => find(renamersQuery.data, item => item.RenamerID === config.RenamerID),
+    [config.RenamerID, renamersQuery.data],
+  );
+
+  let configName: string;
+  if (renamersQuery.isPending) {
+    configName = 'Loading...';
+  } else if (currentRenamer) {
+    configName = `${config.Name} (${currentRenamer.Name} - ${currentRenamer.Version})`;
+  } else {
+    configName = `${config.Name} (<Unknown>)`;
+  }
+
+  return (
+    <option value={config.Name}>
+      {configName}
+    </option>
+  );
+});
+
 const Renamer = () => {
   const dispatch = useDispatch();
   const addedFiles = useSelector((state: RootState) => state.utilities.renamer.files);
@@ -296,7 +320,11 @@ const Renamer = () => {
   const { isPending: settingsPatchPending, mutate: patchSettings } = usePatchSettingsMutation();
 
   const [moveFiles, toggleMoveFiles] = useToggle(settings.Plugins.Renamer.MoveOnImport);
-  const [renameFiles, toggleRenameFiles] = useToggle(settings.Plugins.Renamer.RenameOnImport);
+  // In the case where move on import is not selected, we will assume the user wants to rename files when
+  // they open this page. Otherwise, why are they here? In most cases, it would be for renaming.
+  const [renameFiles, toggleRenameFiles] = useToggle(
+    settings.Plugins.Renamer.MoveOnImport ? settings.Plugins.Renamer.RenameOnImport : true,
+  );
   const [showSettings, toggleSettings] = useToggle(false);
   const [showAddFilesModal, toggleAddFilesModal] = useToggle(false);
   const [showConfigModal, toggleConfigModal] = useToggle(false);
@@ -460,6 +488,14 @@ const Renamer = () => {
     });
   });
 
+  const [renameDisabled, renameDisabledReason] = useMemo(() => {
+    if (relocatePending) return [true, 'Renaming in progress...'];
+    if (configEdited) return [true, 'Config has been edited, please save before renaming files'];
+    if (addedFiles.length === 0) return [true, 'No files added'];
+    if (!moveFiles && !renameFiles) return [true, 'Neither rename nor move is selected. No action to be performed'];
+    return [false, ''];
+  }, [addedFiles.length, configEdited, moveFiles, relocatePending, renameFiles]);
+
   return (
     <div className="flex grow flex-col gap-y-3">
       <ShokoPanel title="File Rename">
@@ -497,8 +533,8 @@ const Renamer = () => {
               className="flex h-13 flex-wrap items-center gap-x-2"
               onClick={handleRename}
               loading={relocatePending}
-              disabled={configEdited || relocatePending || addedFiles.length === 0}
-              tooltip={configEdited ? 'Config has been edited, please save before relocating files' : ''}
+              disabled={renameDisabled}
+              tooltip={renameDisabledReason}
             >
               <Icon path={mdiFileDocumentEditOutline} size={1} />
               Rename Files
@@ -521,9 +557,7 @@ const Renamer = () => {
                     onChange={event => changeSelectedConfig(event.target.value)}
                   >
                     {renamerConfigsQuery.data.map(renamerConfig => (
-                      <option key={renamerConfig.Name} value={renamerConfig.Name}>
-                        {renamerConfig.Name}
-                      </option>
+                      <ConfigOption config={renamerConfig} key={renamerConfig.Name} />
                     ))}
 
                     {renamerConfigsQuery.data.length === 0 && (

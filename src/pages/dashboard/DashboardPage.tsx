@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import { useDispatch, useSelector } from 'react-redux';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { mdiMenuDown } from '@mdi/js';
 import { Icon } from '@mdi/react';
 import { produce } from 'immer';
@@ -150,6 +150,7 @@ function DashboardPage() {
 
   return (
     <>
+      <title>Dashboard | Shoko</title>
       <ResponsiveGridLayout
         layouts={currentLayout}
         breakpoints={{ lg: 1024, md: 768, sm: 640 }} // These match tailwind breakpoints (for consistency)

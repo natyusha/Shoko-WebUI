@@ -32,7 +32,6 @@ function AniDBSettings() {
     MyList_SetUnwatched,
     MyList_SetWatched,
     MyList_StorageState,
-    MyList_UpdateFrequency,
     Notification_HandleMovedFiles,
     Notification_UpdateFrequency,
     Password,
@@ -54,6 +53,7 @@ function AniDBSettings() {
 
   return (
     <>
+      <title>Settings &gt; AniDB | Shoko</title>
       <div className="flex flex-col gap-y-1">
         <div className="text-xl font-semibold">AniDB</div>
         <div>
@@ -259,16 +259,6 @@ function AniDBSettings() {
               id="anime-information"
               value={Anime_UpdateFrequency}
               onChange={event => updateSetting('AniDb', 'Anime_UpdateFrequency', event.target.value)}
-            >
-              <UpdateFrequencyValues />
-            </SelectSmall>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>Sync Mylist</span>
-            <SelectSmall
-              id="sync-mylist"
-              value={MyList_UpdateFrequency}
-              onChange={event => updateSetting('AniDb', 'MyList_UpdateFrequency', event.target.value)}
             >
               <UpdateFrequencyValues />
             </SelectSmall>

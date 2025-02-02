@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router';
 import prettyBytes from 'pretty-bytes';
 
 import ShokoPanel from '@/components/Panels/ShokoPanel';
@@ -8,6 +8,7 @@ import { useDashbordStatsQuery } from '@/core/react-query/dashboard/queries';
 import { resetFilter } from '@/core/slices/collection';
 import { addFilterCriteriaToStore } from '@/core/utilities/filter';
 import useEventCallback from '@/hooks/useEventCallback';
+import useNavigateVoid from '@/hooks/useNavigateVoid';
 
 import type { RootState } from '@/core/store';
 
@@ -15,7 +16,7 @@ const Item = (
   { filter, link, title, value = 0 }: { title: string, value?: string | number, link?: string, filter?: string },
 ) => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const navigate = useNavigateVoid();
   const handleMissingFilter = useEventCallback((filterName: string) => {
     dispatch(resetFilter());
     addFilterCriteriaToStore(filterName).then(() => {
@@ -62,7 +63,12 @@ function CollectionStats() {
       title="Collection Size"
       value={`${prettyBytes(statsQuery.data?.FileSize ?? 0, { binary: true })}`}
     />,
-    <Item key="files" title="Files" value={statsQuery.data?.FileCount} />,
+    <Item
+      key="files"
+      title="Files"
+      value={statsQuery.data?.FileCount}
+      link="/webui/utilities/file-search"
+    />,
     <Item
       key="unrecognized-files"
       title="Unknown Files"
@@ -73,9 +79,14 @@ function CollectionStats() {
       key="multiple-files"
       title="Duplicate Episodes"
       value={statsQuery.data?.EpisodesWithMultipleFiles}
-      link="/webui/utilities/release-management"
+      link="/webui/utilities/release-management/multiples"
     />,
-    <Item key="duplicate-files" title="Duplicate Hashes" value={statsQuery.data?.FilesWithDuplicateLocations} />,
+    <Item
+      key="duplicate-files"
+      title="Duplicate Hashes"
+      value={statsQuery.data?.FilesWithDuplicateLocations}
+      link="/webui/utilities/release-management/duplicates"
+    />,
   ];
 
   const childrenThird = [
@@ -89,13 +100,13 @@ function CollectionStats() {
       key="missing-episodes-collecting"
       title="Missing Episodes (Collecting)"
       value={statsQuery.data?.MissingEpisodesCollecting}
-      filter="HasMissingEpisodesCollecting"
+      link="/webui/utilities/release-management/missing-episodes?onlyCollecting=true"
     />,
     <Item
       key="missing-episodes"
       title="Missing Episodes (Total)"
       value={statsQuery.data?.MissingEpisodes}
-      filter="HasMissingEpisodes"
+      link="/webui/utilities/release-management/missing-episodes"
     />,
   ];
 

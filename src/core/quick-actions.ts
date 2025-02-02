@@ -104,6 +104,11 @@ const quickActions = {
     functionName: 'ValidateAllImages',
     info: 'Identifies any invalid images and re-downloads them.',
   },
+  'search-for-tmdb-matches': {
+    name: 'Search for TMDB Matches',
+    functionName: 'SearchForTmdbMatches',
+    info: 'Scan for TMDB matches for all unlinked AniDB anime.',
+  },
   'update-all-tmdb-movies': {
     name: 'Update All TMDB Movies',
     functionName: 'UpdateAllTmdbMovies',
@@ -114,15 +119,31 @@ const quickActions = {
     functionName: 'UpdateAllTmdbShows',
     info: 'Updates all TMDB Shows in the local database.',
   },
-  'delete-ununsed-tmdb-movies': {
+  'delete-unused-tmdb-movies': {
     name: 'Delete Unused TMDB Movies',
     functionName: 'PurgeAllUnusedTmdbMovies',
-    info: 'Delete all unused TMDB Movies that are not linked to any AniDB anime.',
+    info: 'Deletes all unused TMDB Movies that are not linked to any AniDB anime.',
   },
-  'delete-ununsed-tmdb-shows': {
+  'delete-unused-tmdb-shows': {
     name: 'Delete Unused TMDB Shows',
     functionName: 'PurgeAllUnusedTmdbShows',
-    info: 'Delete all unused TMDB Shows that are not linked to any AniDB anime.',
+    info: 'Deletes all unused TMDB Shows that are not linked to any AniDB anime.',
+  },
+  'download-missing-tmdb-people': {
+    name: 'Download Missing TMDB People',
+    functionName: 'DownloadMissingTmdbPeople',
+    info: 'Downloads any TMDB People missing in the local database.',
+  },
+  'purge-tmdb-movie-collections': {
+    name: 'Delete All TMDB Movie Collections',
+    functionName: 'PurgeAllTmdbMovieCollections',
+    info:
+      'Deletes all TMDB Movie Collections stored in the local database, and removes any images associated with them.',
+  },
+  'purge-tmdb-show-alternate-orderings': {
+    name: 'Delete All TMDB Show Alternate Orderings',
+    functionName: 'PurgeAllTmdbShowAlternateOrderings',
+    info: 'Deletes all TMDB Show Alternate Orderings stored in the local database.',
   },
   'plex-sync-all': {
     name: 'Sync Plex Watch Status',

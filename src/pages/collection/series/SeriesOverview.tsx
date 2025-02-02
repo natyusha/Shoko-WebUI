@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { useParams } from 'react-router';
+import { useOutletContext } from 'react-router';
 import { mdiEarth, mdiOpenInNew } from '@mdi/js';
 import { Icon } from '@mdi/react';
 import cx from 'classnames';
-import { flatMap, get, map, round, toNumber } from 'lodash';
+import { flatMap, get, map, round } from 'lodash';
 
 import CharacterImage from '@/components/CharacterImage';
 import EpisodeSummary from '@/components/Collection/Episode/EpisodeSummary';
@@ -15,11 +15,11 @@ import {
   useRelatedAnimeQuery,
   useSeriesCastQuery,
   useSeriesNextUpQuery,
-  useSeriesQuery,
   useSimilarAnimeQuery,
 } from '@/core/react-query/series/queries';
 import useEventCallback from '@/hooks/useEventCallback';
 
+import type { SeriesContextType } from '@/components/Collection/constants';
 import type { ImageType } from '@/core/types/api/common';
 import type { SeriesCast } from '@/core/types/api/series';
 
@@ -27,20 +27,15 @@ import type { SeriesCast } from '@/core/types/api/series';
 const MetadataLinks = ['AniDB', 'TMDB', 'TraktTv'] as const;
 
 const SeriesOverview = () => {
-  const { seriesId } = useParams();
+  const { series } = useOutletContext<SeriesContextType>();
 
-  const { data: series, ...seriesQuery } = useSeriesQuery(
-    toNumber(seriesId!),
-    { includeDataFrom: ['AniDB', 'TMDB'] },
-    !!seriesId,
-  );
-  const nextUpEpisodeQuery = useSeriesNextUpQuery(toNumber(seriesId!), {
+  const nextUpEpisodeQuery = useSeriesNextUpQuery(series.IDs.ID, {
     includeDataFrom: ['AniDB'],
     includeMissing: false,
     onlyUnwatched: false,
-  }, !!seriesId);
-  const relatedAnimeQuery = useRelatedAnimeQuery(toNumber(seriesId!), !!seriesId);
-  const similarAnimeQuery = useSimilarAnimeQuery(toNumber(seriesId!), !!seriesId);
+  });
+  const relatedAnimeQuery = useRelatedAnimeQuery(series.IDs.ID);
+  const similarAnimeQuery = useSimilarAnimeQuery(series.IDs.ID);
 
   const tabStates = [
     { label: 'Metadata Sites', value: 'metadata' },
@@ -54,7 +49,7 @@ const SeriesOverview = () => {
 
   const relatedAnime = useMemo(() => relatedAnimeQuery?.data ?? [], [relatedAnimeQuery.data]);
   const similarAnime = useMemo(() => similarAnimeQuery?.data ?? [], [similarAnimeQuery.data]);
-  const cast = useSeriesCastQuery(toNumber(seriesId!), !!seriesId).data;
+  const cast = useSeriesCastQuery(series.IDs.ID).data;
 
   const getThumbnailUrl = (item: SeriesCast, mode: string) => {
     const thumbnail = get<SeriesCast, string, ImageType | null>(item, `${mode}.Image`, null);
@@ -64,6 +59,7 @@ const SeriesOverview = () => {
 
   return (
     <>
+      <title>{`${series.Name} > Overview | Shoko`}</title>
       <div className="flex gap-x-6">
         <div className="flex w-full gap-x-6">
           <ShokoPanel
@@ -74,7 +70,6 @@ const SeriesOverview = () => {
             options={
               <MultiStateButton states={tabStates} activeState={currentTab} onStateChange={handleTabStateChange} />
             }
-            isFetching={seriesQuery.isFetching}
           >
             {series && currentTab === 'metadata' && (
               <div
@@ -157,7 +152,7 @@ const SeriesOverview = () => {
             isFetching={nextUpEpisodeQuery.isFetching}
           >
             {nextUpEpisodeQuery.isSuccess && nextUpEpisodeQuery.data
-              ? <EpisodeSummary seriesId={toNumber(seriesId)} episode={nextUpEpisodeQuery.data} nextUp />
+              ? <EpisodeSummary seriesId={series.IDs.ID} episode={nextUpEpisodeQuery.data} nextUp />
               : (
                 <div className="flex grow items-center justify-center font-semibold">
                   All available episodes have already been watched
@@ -209,9 +204,9 @@ const SeriesOverview = () => {
         </ShokoPanel>
       )}
 
-      <ShokoPanel title="Top 20 Seiyuu" className="w-full" transparent>
+      <ShokoPanel title="Top 20 Actors" className="w-full" transparent>
         <div className="z-10 flex w-full gap-x-6">
-          {cast?.filter(credit => credit.RoleName === 'Seiyuu' && credit.Character).slice(0, 20).map(seiyuu => (
+          {cast?.filter(credit => credit.RoleName === 'Actor' && credit.Character).slice(0, 20).map(seiyuu => (
             <div
               key={`${seiyuu.Character?.Name}-${Math.random() * (cast.length + (seiyuu.Character?.Name.length ?? 0))}`}
               className="flex flex-col items-center gap-y-3 pb-3"

@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams } from 'react-router';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useParams, useSearchParams } from 'react-router';
 import cx from 'classnames';
 import { cloneDeep, toNumber } from 'lodash';
 import { useDebounceValue, useToggle } from 'usehooks-ts';
@@ -27,6 +26,7 @@ import { resetFilter } from '@/core/slices/collection';
 import { buildFilter } from '@/core/utilities/filter';
 import useEventCallback from '@/hooks/useEventCallback';
 import useFlattenListResult from '@/hooks/useFlattenListResult';
+import useNavigateVoid from '@/hooks/useNavigateVoid';
 
 import type { RootState } from '@/core/store';
 import type { FilterCondition, FilterType, SortingCriteria } from '@/core/types/api/filter';
@@ -89,7 +89,7 @@ function Collection() {
   const isLiveFilter = useMemo(() => pathname.endsWith('/live'), [pathname]);
 
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const navigate = useNavigateVoid();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const groupSearch = useMemo(() => searchParams.get('q') ?? '', [searchParams]);
@@ -117,20 +117,22 @@ function Collection() {
   const { showRandomPoster } = settings.WebUI_Settings.collection.image;
 
   const [mode, setMode] = useState<'poster' | 'list'>('poster');
-  const [showFilterSidebar, toggleFilterSidebar] = useToggle(false);
+  const [showFilterSidebar, toggleFilterSidebar, setShowFilterSidebar] = useToggle();
   const [timelineSeries, setTimelineSeries] = useState<SeriesType[]>([]);
 
   const handleFilterSidebarToggle = useEventCallback(() => {
-    if (!showFilterSidebar && !filterId) {
+    if (!filterId) {
       dispatch(resetFilter());
       navigate('filter/live');
+      return;
     }
     toggleFilterSidebar();
   });
 
   useEffect(() => {
-    if (!filterId && showFilterSidebar) toggleFilterSidebar();
-  }, [filterId, showFilterSidebar, toggleFilterSidebar]);
+    if (filterId === 'live') setShowFilterSidebar(true);
+    if (!filterId) setShowFilterSidebar(false);
+  }, [filterId, setShowFilterSidebar]);
 
   const { mutate: patchSettings } = usePatchSettingsMutation();
 
@@ -219,57 +221,60 @@ function Collection() {
   });
 
   return (
-    <div className="flex grow flex-col gap-y-6">
-      <div className="sticky -top-6 z-10 flex items-center justify-between rounded-lg border border-panel-border bg-panel-background p-6">
-        <CollectionTitle
-          // eslint-disable-next-line no-nested-ternary
-          count={(total === 0 && isFetching) ? -1 : (isSeries ? total : groupsTotal)}
-          filterName={filterQuery?.data?.Name}
-          groupName={groupQuery?.data?.Name}
-          filterActive={!!activeFilter}
-          searchQuery={isSeries ? seriesSearch : groupSearch}
-        />
-        <TitleOptions
-          groupSearch={groupSearch}
-          isSeries={isSeries}
-          item={item}
-          mode={mode}
-          seriesSearch={seriesSearch}
-          setSearch={setSearch}
-          toggleFilterSidebar={handleFilterSidebarToggle}
-          toggleMode={toggleMode}
-        />
-      </div>
-      <div className="flex grow">
-        <CollectionView
-          groupExtras={groupExtras ?? []}
-          fetchNextPage={groupsQuery.fetchNextPage}
-          isFetchingNextPage={groupsQuery.isFetchingNextPage}
-          isFetching={isFetching}
-          isSeries={isSeries}
-          isSidebarOpen={showFilterSidebar}
-          items={items}
-          mode={mode}
-          total={total}
-        />
-        <div
-          className={cx(
-            'flex items-start',
-            !isSeries && 'transition-all',
-            showFilterSidebar
-              ? 'w-[28rem] opacity-100'
-              : 'w-0 opacity-0 overflow-hidden ',
-          )}
-        >
-          <FilterSidebar />
+    <>
+      <title>{`${isSeries ? groupQuery?.data?.Name : 'Collection'} | Shoko`}</title>
+      <div className="flex grow flex-col gap-y-6">
+        <div className="sticky -top-6 z-10 flex items-center justify-between rounded-lg border border-panel-border bg-panel-background p-6">
+          <CollectionTitle
+            // eslint-disable-next-line no-nested-ternary
+            count={(total === 0 && isFetching) ? -1 : (isSeries ? total : groupsTotal)}
+            filterName={filterQuery?.data?.Name}
+            groupName={groupQuery?.data?.Name}
+            filterActive={!!activeFilter}
+            searchQuery={isSeries ? seriesSearch : groupSearch}
+          />
+          <TitleOptions
+            groupSearch={groupSearch}
+            isSeries={isSeries}
+            item={item}
+            mode={mode}
+            seriesSearch={seriesSearch}
+            setSearch={setSearch}
+            toggleFilterSidebar={handleFilterSidebarToggle}
+            toggleMode={toggleMode}
+          />
         </div>
-        {isSeries && !showFilterSidebar && (
-          <TimelineSidebar series={timelineSeries} isFetching={seriesQuery.isPending} />
-        )}
+        <div className="flex grow">
+          <CollectionView
+            groupExtras={groupExtras ?? []}
+            fetchNextPage={groupsQuery.fetchNextPage}
+            isFetchingNextPage={groupsQuery.isFetchingNextPage}
+            isFetching={isFetching}
+            isSeries={isSeries}
+            isSidebarOpen={showFilterSidebar}
+            items={items}
+            mode={mode}
+            total={total}
+          />
+          <div
+            className={cx(
+              'flex items-start',
+              !isSeries && 'transition-all',
+              showFilterSidebar
+                ? 'w-[28rem] opacity-100'
+                : 'w-0 opacity-0 overflow-hidden ',
+            )}
+          >
+            <FilterSidebar />
+          </div>
+          {isSeries && !showFilterSidebar && (
+            <TimelineSidebar series={timelineSeries} isFetching={seriesQuery.isPending} />
+          )}
+        </div>
+        <EditSeriesModal />
+        <EditGroupModal />
       </div>
-      <EditSeriesModal />
-      <EditGroupModal />
-    </div>
+    </>
   );
 }
 

@@ -44,13 +44,17 @@ const actions = {
       'purge-all-tvdb-info',
     ],
   },
-  moviedb: {
+  tmdb: {
     title: 'TMDB',
     data: [
+      'search-for-tmdb-matches',
       'update-all-tmdb-shows',
-      'delete-ununsed-tmdb-shows',
+      'delete-unused-tmdb-shows',
       'update-all-tmdb-movies',
-      'delete-ununsed-tmdb-movies',
+      'delete-unused-tmdb-movies',
+      'download-missing-tmdb-people',
+      'purge-tmdb-movie-collections',
+      'purge-tmdb-show-alternate-orderings',
     ],
   },
   shoko: {
@@ -97,8 +101,6 @@ const Action = ({ actionKey, length }: { actionKey: string, length: number }) =>
     runAction(functionName, {
       onSuccess: () => toast.success(`Running action "${name}"`),
     });
-    setTimeout(() => {
-    }, 2000);
   });
 
   return (

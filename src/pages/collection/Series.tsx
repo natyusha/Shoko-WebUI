@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { Outlet, useParams } from 'react-router';
-import { Link, NavLink, useNavigate, useOutletContext } from 'react-router-dom';
+import { Link, NavLink, Outlet, useOutletContext, useParams } from 'react-router';
 import useMeasure from 'react-use-measure';
 import {
   mdiAccountGroupOutline,
@@ -26,6 +25,7 @@ import { useSeriesImagesQuery, useSeriesQuery } from '@/core/react-query/series/
 import { useSettingsQuery } from '@/core/react-query/settings/queries';
 import { setSeriesId } from '@/core/slices/modals/editSeries';
 import useEventCallback from '@/hooks/useEventCallback';
+import useNavigateVoid from '@/hooks/useNavigateVoid';
 
 import type { SeriesContextType } from '@/components/Collection/constants';
 import type { ImageType } from '@/core/types/api/common';
@@ -40,6 +40,7 @@ const SeriesTab: SeriesTabProps = ({ icon, text, to }) => (
         'flex items-center gap-x-3 transition-colors hover:text-panel-text-primary',
         isActive && 'text-panel-text-primary',
       )}
+    replace
   >
     <Icon path={icon} size={1} />
     {text}
@@ -51,7 +52,7 @@ const getImagePath = ({ ID, Source, Type }: ImageType) => `/api/v3/Image/${Sourc
 const languageMapping = { 'x-jat': 'ja', 'x-kot': 'ko', 'x-zht': 'zh-hans' };
 
 const Series = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigateVoid();
   const { seriesId } = useParams();
 
   const seriesQuery = useSeriesQuery(toNumber(seriesId!), { includeDataFrom: ['AniDB', 'TMDB'] }, !!seriesId);
@@ -154,7 +155,7 @@ const Series = () => {
 
       <EditSeriesModal />
 
-      <Outlet context={{ backdrop, scrollRef } satisfies SeriesContextType} />
+      <Outlet context={{ backdrop, scrollRef, series } satisfies SeriesContextType} />
 
       <div
         className="fixed left-0 top-0 -z-10 w-full bg-cover bg-fixed opacity-5"

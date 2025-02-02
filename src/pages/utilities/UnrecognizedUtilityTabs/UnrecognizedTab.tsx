@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import useMeasure from 'react-use-measure';
 import {
   mdiCloseCircleOutline,
@@ -46,8 +45,10 @@ import { useImportFoldersQuery } from '@/core/react-query/import-folder/queries'
 import { invalidateQueries } from '@/core/react-query/queryClient';
 import { addFiles } from '@/core/slices/utilities/renamer';
 import { FileSortCriteriaEnum } from '@/core/types/api/file';
+import getEd2kLink from '@/core/utilities/getEd2kLink';
 import useEventCallback from '@/hooks/useEventCallback';
 import useFlattenListResult from '@/hooks/useFlattenListResult';
+import useNavigateVoid from '@/hooks/useNavigateVoid';
 import useRowSelection from '@/hooks/useRowSelection';
 import useTableSearchSortCriteria from '@/hooks/utilities/useTableSearchSortCriteria';
 
@@ -70,7 +71,7 @@ const Menu = (
   } = props;
 
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const navigate = useNavigateVoid();
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -239,7 +240,7 @@ const Menu = (
 };
 
 function UnrecognizedTab() {
-  const navigate = useNavigate();
+  const navigate = useNavigateVoid();
 
   const {
     debouncedSearch,
@@ -347,10 +348,7 @@ function UnrecognizedTab() {
   const getED2KLinks = useEventCallback(() => ({
     fileIds: selectedRows.map(file => file.ID),
     links: selectedRows.map(
-      file =>
-        `ed2k://|file|${
-          file.Locations[0]?.RelativePath?.split(/[\\/]+/g).pop() ?? ''
-        }|${file.Size}|${file.Hashes.ED2K}|/`,
+      file => getEd2kLink(file),
     ).toSorted(),
   }));
 
@@ -375,6 +373,7 @@ function UnrecognizedTab() {
 
   return (
     <>
+      <title>Unrecognized Files | Shoko</title>
       <div className="flex grow flex-col gap-y-6" ref={tabContainerRef}>
         <div>
           <ShokoPanel title={<Title />} options={<ItemCount count={fileCount} selected={selectedRows?.length} />}>

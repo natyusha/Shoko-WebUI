@@ -1,8 +1,7 @@
 /* global globalThis */
 import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Navigate, Route } from 'react-router';
-import { RouterProvider, createBrowserRouter, createRoutesFromElements } from 'react-router-dom';
+import { Navigate, Route, RouterProvider, createBrowserRouter, createRoutesFromElements } from 'react-router';
 import * as Sentry from '@sentry/react';
 
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -41,7 +40,7 @@ import MetadataSitesSettings from '@/pages/settings/tabs/MetadataSitesSettings';
 import UserManagementSettings from '@/pages/settings/tabs/UserManagementSettings';
 import UnsupportedPage from '@/pages/unsupported/UnsupportedPage';
 import FileSearch from '@/pages/utilities/FileSearch';
-import MultiplesUtil from '@/pages/utilities/ReleaseManagementUtilityTabs/MultiplesUtil';
+import ReleaseManagement from '@/pages/utilities/ReleaseManagement';
 import Renamer from '@/pages/utilities/Renamer';
 import SeriesWithoutFilesUtility from '@/pages/utilities/SeriesWithoutFilesUtility';
 import IgnoredFilesTab from '@/pages/utilities/UnrecognizedUtilityTabs/IgnoredFilesTab';
@@ -53,7 +52,7 @@ import AuthenticatedRoute from './AuthenticatedRoute';
 
 import type { RootState } from '@/core/store';
 
-const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouter(createBrowserRouter);
+const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouterV7(createBrowserRouter);
 
 const router = sentryCreateBrowserRouter(
   createRoutesFromElements(
@@ -91,7 +90,7 @@ const router = sentryCreateBrowserRouter(
             <Route path="unrecognized/manually-linked-files" element={<ManuallyLinkedTab />} />
             <Route path="unrecognized/ignored-files" element={<IgnoredFilesTab />} />
             <Route path="release-management" element={<Navigate to="multiples" replace />} />
-            <Route path="release-management/multiples" element={<MultiplesUtil />} />
+            <Route path="release-management/:itemType" element={<ReleaseManagement />} />
             <Route path="series-without-files" element={<SeriesWithoutFilesUtility />} />
             <Route path="file-search" element={<FileSearch />} />
             <Route path="renamer" element={<Renamer />} />

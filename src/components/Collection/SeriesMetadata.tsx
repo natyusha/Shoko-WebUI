@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { mdiCloseCircleOutline, mdiOpenInNew, mdiPencilCircleOutline, mdiPlusCircleOutline } from '@mdi/js';
 import { Icon } from '@mdi/react';
 
@@ -7,6 +6,7 @@ import Button from '@/components/Input/Button';
 import { invalidateQueries } from '@/core/react-query/queryClient';
 import { useDeleteTmdbLinkMutation } from '@/core/react-query/tmdb/mutations';
 import useEventCallback from '@/hooks/useEventCallback';
+import useNavigateVoid from '@/hooks/useNavigateVoid';
 
 type Props = {
   id?: number;
@@ -16,7 +16,7 @@ type Props = {
 };
 
 const MetadataLink = ({ id, seriesId, site, type }: Props) => {
-  const navigate = useNavigate();
+  const navigate = useNavigateVoid();
   const { mutate: deleteTmdbLink } = useDeleteTmdbLinkMutation(seriesId, type ?? 'Movie');
 
   const siteLink = useMemo(() => {
@@ -27,8 +27,7 @@ const MetadataLink = ({ id, seriesId, site, type }: Props) => {
       case 'TMDB':
         return `https://www.themoviedb.org/${type === 'Show' ? 'tv' : 'movie'}/${id}`;
       case 'TraktTv':
-        // TODO: Figure how to get trakt series link using ID
-        return '#';
+        return `https://trakt.tv/shows/${id}`;
       default:
         return '#';
     }

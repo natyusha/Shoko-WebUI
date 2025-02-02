@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import { Slide, ToastContainer } from 'react-toastify';
 import {
   mdiAlertCircleOutline,
@@ -12,7 +12,6 @@ import {
 } from '@mdi/js';
 import { Icon } from '@mdi/react';
 import cx from 'classnames';
-import 'react-toastify/dist/ReactToastify.min.css';
 import { siDiscord } from 'simple-icons';
 
 import Button from '@/components/Input/Button';
@@ -23,11 +22,12 @@ import { useLoginMutation } from '@/core/react-query/auth/mutations';
 import { useRandomImageMetadataQuery } from '@/core/react-query/image/queries';
 import { useServerStatusQuery, useVersionQuery } from '@/core/react-query/init/queries';
 import { ImageTypeEnum } from '@/core/types/api/common';
+import useNavigateVoid from '@/hooks/useNavigateVoid';
 
 import type { RootState } from '@/core/store';
 
 function LoginPage() {
-  const navigate = useNavigate();
+  const navigate = useNavigateVoid();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const apiSession = useSelector((state: RootState) => state.apiSession);
@@ -113,6 +113,7 @@ function LoginPage() {
 
   return (
     <>
+      <title>Login | Shoko</title>
       <ToastContainer
         position="bottom-right"
         autoClose={4000}

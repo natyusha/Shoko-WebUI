@@ -1,12 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
+import { mdiTagPlusOutline } from '@mdi/js';
+import Icon from '@mdi/react';
 import { toNumber } from 'lodash';
+import { useToggle } from 'usehooks-ts';
 
 import BackgroundImagePlaceholderDiv from '@/components/BackgroundImagePlaceholderDiv';
 import CleanDescription from '@/components/Collection/CleanDescription';
 import SeriesInfo from '@/components/Collection/SeriesInfo';
 import SeriesUserStats from '@/components/Collection/SeriesUserStats';
 import TagButton from '@/components/Collection/TagButton';
+import CustomTagModal from '@/components/Dialogs/CustomTagModal';
+import Button from '@/components/Input/Button';
 import ShokoPanel from '@/components/Panels/ShokoPanel';
 import { useSeriesImagesQuery, useSeriesTagsQuery } from '@/core/react-query/series/queries';
 import { useSettingsQuery } from '@/core/react-query/settings/queries';
@@ -23,6 +28,8 @@ const SeriesTopPanel = React.memo(({ series }: { series: SeriesType }) => {
   const { showRandomPoster } = useSettingsQuery().data.WebUI_Settings.collection.image;
   const imagesQuery = useSeriesImagesQuery(toNumber(seriesId!), !!seriesId && showRandomPoster);
   const [poster, setPoster] = useState<ImageType>();
+  const [showTagModal, toggleTagModal] = useToggle(false);
+
   useEffect(() => {
     if (!showRandomPoster) {
       setPoster(series.Images?.Posters?.[0]);
@@ -51,7 +58,7 @@ const SeriesTopPanel = React.memo(({ series }: { series: SeriesType }) => {
       <div className="flex w-full max-w-[56.25rem] flex-col gap-y-6">
         <ShokoPanel
           title="Series Description"
-          className="!h-[16.5rem]"
+          className="!h-64"
           contentClassName="contain-strict"
           transparent
         >
@@ -63,7 +70,7 @@ const SeriesTopPanel = React.memo(({ series }: { series: SeriesType }) => {
 
         <ShokoPanel
           title="Series Information"
-          className="!h-[14.5rem]"
+          className="!h-60"
           transparent
         >
           <div className="grid h-32 grid-cols-1 gap-x-12 gap-y-2 overflow-y-auto pr-2 text-base font-normal 2xl:grid-cols-2 2xl:pr-0">
@@ -74,18 +81,26 @@ const SeriesTopPanel = React.memo(({ series }: { series: SeriesType }) => {
       <div className="flex w-full flex-col gap-y-6">
         <ShokoPanel
           title="Top 10 Tags"
-          className="!h-[16.5rem]"
+          className="!h-64"
           contentClassName="!flex-row flex-wrap gap-3 content-start contain-strict"
           isFetching={tagsQuery.isFetching}
           transparent
+          options={
+            <div className="flex gap-x-2">
+              <Button onClick={toggleTagModal} tooltip="Edit Tags">
+                <Icon className="text-panel-icon-important" path={mdiTagPlusOutline} size={1} />
+              </Button>
+            </div>
+          }
         >
+          <CustomTagModal seriesId={toNumber(seriesId)} show={showTagModal} onClose={toggleTagModal} />
           {tags.slice(0, 10)
             .map(tag => <TagButton key={tag.ID} text={tag.Name} tagType={tag.Source} type="Series" />)}
         </ShokoPanel>
 
         <ShokoPanel
           title="User Stats"
-          className="!h-[14.5rem]"
+          className="!h-60"
           contentClassName="flex-wrap gap-3"
           transparent
         >

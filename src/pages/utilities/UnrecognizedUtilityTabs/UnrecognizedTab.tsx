@@ -8,7 +8,6 @@ import {
   mdiDumpTruck,
   mdiEyeOffOutline,
   mdiFileDocumentEditOutline,
-  mdiFileDocumentOutline,
   mdiLoading,
   mdiMagnify,
   mdiMinusCircleOutline,
@@ -61,13 +60,11 @@ const Menu = (
   props: {
     selectedRows: FileType[];
     setSelectedRows: Updater<Record<number, boolean>>;
-    setSeriesSelectModal(this: void, show: boolean): void;
   },
 ) => {
   const {
     selectedRows,
     setSelectedRows,
-    setSeriesSelectModal,
   } = props;
 
   const dispatch = useDispatch();
@@ -90,9 +87,9 @@ const Menu = (
 
   const removeFileFromSelection = useEventCallback(
     (fileId: number) =>
-      setSelectedRows((immerState) => {
-        immerState[fileId] = false;
-        return immerState;
+      setSelectedRows((draftState) => {
+        draftState[fileId] = false;
+        return draftState;
       }),
   );
 
@@ -176,7 +173,6 @@ const Menu = (
       </div>
       <MenuButton onClick={rescanFiles} icon={mdiDatabaseSearchOutline} name="Rescan" />
       <MenuButton onClick={rehashFiles} icon={mdiDatabaseSyncOutline} name="Rehash" />
-      <MenuButton onClick={() => setSeriesSelectModal(true)} icon={mdiFileDocumentOutline} name="Add To AniDB" />
       <MenuButton onClick={handleRename} icon={mdiFileDocumentEditOutline} name="Rename" />
       <MenuButton onClick={ignoreFiles} icon={mdiEyeOffOutline} name="Ignore" />
       <MenuButton onClick={showDeleteConfirmation} icon={mdiMinusCircleOutline} name="Delete" highlight />
@@ -193,7 +189,6 @@ const Menu = (
     rehashFiles,
     rescanFiles,
     setSelectedRows,
-    setSeriesSelectModal,
     showDeleteConfirmation,
     selectedRows,
   ]);
@@ -239,7 +234,7 @@ const Menu = (
   );
 };
 
-function UnrecognizedTab() {
+const UnrecognizedTab = () => {
   const navigate = useNavigateVoid();
 
   const {
@@ -391,7 +386,6 @@ function UnrecognizedTab() {
               <Menu
                 selectedRows={selectedRows}
                 setSelectedRows={setRowSelection}
-                setSeriesSelectModal={setSeriesSelectModal}
               />
               <div className={cx('gap-x-3', selectedRows.length !== 0 ? 'flex' : 'hidden')}>
                 <Button
@@ -460,6 +454,6 @@ function UnrecognizedTab() {
       />
     </>
   );
-}
+};
 
 export default UnrecognizedTab;

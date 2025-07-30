@@ -18,7 +18,7 @@ type OutletContextType = {
   setIsPersistent: (value: boolean) => void;
 };
 
-function StartServer() {
+const StartServer = () => {
   const dispatch = useDispatch();
   const navigate = useNavigateVoid();
 
@@ -78,7 +78,7 @@ function StartServer() {
           <div className="mt-24 flex items-center justify-center">
             {pollingInterval === 0
               && ((!serverStatusQuery.isSuccess && !serverStatusQuery.isError)
-                || serverStatusQuery.data?.State === 'Failed')
+                || serverStatusQuery.data?.State === 'Waiting')
               && (
                 <Button onClick={() => handleStart()} buttonType="primary" className="w-64 py-2 font-semibold">
                   Start Server
@@ -87,13 +87,13 @@ function StartServer() {
           </div>
         </div>
         <Footer
-          prevDisabled={serverStatusQuery.data?.State !== 'Failed'}
+          prevDisabled={serverStatusQuery.data?.State !== 'Waiting'}
           nextDisabled={serverStatusQuery.data?.State !== 'Started'}
           saveFunction={handleNext}
         />
       </TransitionDiv>
     </>
   );
-}
+};
 
 export default StartServer;

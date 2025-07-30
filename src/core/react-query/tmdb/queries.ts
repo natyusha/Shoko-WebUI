@@ -85,7 +85,7 @@ export const useTmdbSearchQuery = (
         try {
           const idLookupData: TmdbSearchResultType = await axios.get(`Tmdb/${type}/Online/${query}`);
           finalData.push(idLookupData);
-        } catch (error) {
+        } catch (_) {
           // Ignore, show/movie not found on TMDB with provided ID
         }
       }
@@ -130,6 +130,7 @@ export const useTmdbBulkEpisodesQuery = (data: TmdbBulkRequestType, enabled = tr
   });
 
   return {
+    // eslint-disable-next-line @tanstack/query/no-rest-destructuring
     ...bulkEpisodesQuery,
     isSuccess: query.isSuccess,
     isPending: query.isPending,

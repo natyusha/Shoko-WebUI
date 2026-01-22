@@ -13,7 +13,6 @@ import toast from '@/components/Toast';
 import { usePatchSettingsMutation } from '@/core/react-query/settings/mutations';
 import { useSettingsQuery } from '@/core/react-query/settings/queries';
 import { setItem as setMiscItem } from '@/core/slices/misc';
-import useEventCallback from '@/hooks/useEventCallback';
 
 import type { PluginRenamerSettingsType } from '@/core/types/api/settings';
 
@@ -69,6 +68,7 @@ const SettingsPage = () => {
       'Unsaved Changes',
       'Please save before leaving this page.',
       { autoClose: false, position: 'top-right' },
+      true,
     );
   }, [debouncedUnsavedChanges]);
 
@@ -118,7 +118,7 @@ const SettingsPage = () => {
     }
   };
 
-  const validateAndPatchSettings = useEventCallback(() => {
+  const validateAndPatchSettings = () => {
     if (!isHttpServerUrlValid()) {
       toast.error(
         'Invalid HTTP Server URL',
@@ -138,12 +138,12 @@ const SettingsPage = () => {
     }
 
     patchSettings({ newSettings });
-  });
+  };
 
-  const handleCancel = useEventCallback(() => {
+  const handleCancel = () => {
     setNewSettings(settings);
     dispatch(setMiscItem({ webuiPreviewTheme: '' }));
-  });
+  };
 
   const [containerRef, containerBounds] = useMeasure();
 

@@ -12,7 +12,6 @@ import { useVersionQuery } from '@/core/react-query/init/queries';
 import { useWebuiUploadThemeMutation } from '@/core/react-query/webui/mutations';
 import { useWebuiThemesQuery, useWebuiUpdateCheckQuery } from '@/core/react-query/webui/queries';
 import { uiVersion } from '@/core/util';
-import useEventCallback from '@/hooks/useEventCallback';
 import useSettingsContext from '@/hooks/useSettingsContext';
 
 let themeUpdateCounter = 0;
@@ -38,7 +37,7 @@ const GeneralSettings = () => {
   const themesQuery = useWebuiThemesQuery();
   const { isPending: isUploading, mutate: uploadTheme } = useWebuiUploadThemeMutation();
 
-  const onOpenFileDialog = useEventCallback((event: React.SyntheticEvent) => {
+  const onOpenFileDialog = (event: React.SyntheticEvent) => {
     if (isUploading) {
       return;
     }
@@ -48,9 +47,9 @@ const GeneralSettings = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
-  });
+  };
 
-  const onFileChange = useEventCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (isUploading) {
       return;
     }
@@ -60,21 +59,23 @@ const GeneralSettings = () => {
     const file = event.target.files?.[0];
     if (!file) return;
     uploadTheme({ file }, {
-      async onSuccess(data) {
-        await themesQuery.refetch();
+      onSuccess(data) {
+        themesQuery.refetch()
+          .then(() => {
+            themeUpdateCounter += 1;
+            // URL cannot be built without a base, so we use localhost
+            const path = new URL(themePathHref.value, 'http://localhost');
+            path.searchParams.set('updateCount', themeUpdateCounter.toString());
+            // Remove base from URL and set value
+            themePathHref.value = `${path.pathname}${path.search}`;
 
-        themeUpdateCounter += 1;
-        // URL cannot be built without a base, so we use localhost
-        const path = new URL(themePathHref.value, 'http://localhost');
-        path.searchParams.set('updateCount', themeUpdateCounter.toString());
-        // Remove base from URL and set value
-        themePathHref.value = `${path.pathname}${path.search}`;
-
-        updateSetting('WebUI_Settings', 'theme', `theme-${data.ID}`);
-        toast.info(`Successfully uploaded theme "${data.Name}"`);
+            updateSetting('WebUI_Settings', 'theme', `theme-${data.ID}`);
+            toast.info(`Successfully uploaded theme "${data.Name}"`);
+          })
+          .catch(console.error);
       },
     });
-  });
+  };
 
   const currentTheme = useMemo(() => (
     themesQuery.data?.find(theme => `theme-${theme.ID}` === WebUI_Settings.theme)

@@ -7,7 +7,6 @@ import { defineConfig } from 'vite';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { manualChunksPlugin } from 'vite-plugin-webpackchunkname'
 
 export default defineConfig(async () => {
   const isDebug = process.env.NODE_ENV !== 'production';
@@ -24,12 +23,13 @@ export default defineConfig(async () => {
       authToken: process.env.SENTRY_AUTH_TOKEN,
       org: 'shoko-anime',
       project: 'shoko-webui',
+      applicationKey: 'shoko-webui',
       release: {
         name: isDebug ? 'dev' : `shoko-webui@${version}`,
       },
-      include: './dist',
-      urlPrefix: '~/webui/dist/',
-      ignore: [],
+      sourcemaps: {
+        assets: './dist/assets/*.js?(.map)',
+      },
       reactComponentAnnotation: { enabled: true },
     });
   }
@@ -46,10 +46,18 @@ export default defineConfig(async () => {
       ],
     },
     build: {
-      sourcemap: true,
+      sourcemap: 'hidden',
       chunkSizeWarningLimit: 2000
     },
-    plugins: [react(), sentryPlugin, tailwindcss(), manualChunksPlugin()],
+    plugins: [
+      react({
+        babel: {
+          plugins: ['babel-plugin-react-compiler'],
+        },
+      }),
+      sentryPlugin,
+      tailwindcss()
+    ],
     base: "/webui/"
   };
 });

@@ -1,5 +1,5 @@
 // This is the least maintainable file in the entire codebase
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useEffectEvent, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
 import {
   mdiLink,
@@ -47,7 +47,6 @@ import { EpisodeTypeEnum } from '@/core/types/api/episode';
 import { SeriesTypeEnum } from '@/core/types/api/series';
 import { formatThousand } from '@/core/util';
 import { detectShow, findMostCommonShowName } from '@/core/utilities/auto-match-logic';
-import useEventCallback from '@/hooks/useEventCallback';
 import useNavigateVoid from '@/hooks/useNavigateVoid';
 
 import type { FileType } from '@/core/types/api/file';
@@ -273,32 +272,30 @@ const LinkFilesTab = () => {
     ))
   ), [episodes]);
 
-  const addLink = useEventCallback(
-    (FileID: number, EpisodeID = 0, LinkID?: number) =>
-      setLinks((draftState) => {
-        if (EpisodeID === 0) {
-          draftState.push({ LinkID: generateLinkID(), FileID, EpisodeID: 0 });
-        } else {
-          const itemIndex = LinkID
-            ? draftState.findIndex(link => link.LinkID === LinkID)
-            : draftState.findIndex(link => link.FileID === FileID);
-          draftState[itemIndex].EpisodeID = EpisodeID;
-        }
-      }),
-  );
+  const addLink = (FileID: number, EpisodeID = 0, LinkID?: number) =>
+    setLinks((draftState) => {
+      if (EpisodeID === 0) {
+        draftState.push({ LinkID: generateLinkID(), FileID, EpisodeID: 0 });
+      } else {
+        const itemIndex = LinkID
+          ? draftState.findIndex(link => link.LinkID === LinkID)
+          : draftState.findIndex(link => link.FileID === FileID);
+        draftState[itemIndex].EpisodeID = EpisodeID;
+      }
+    });
 
-  const duplicateLink = useEventCallback(() => {
+  const duplicateLink = () => {
     addLink(orderedLinks[selectedLink].FileID);
-  });
+  };
 
-  const removeLink = useEventCallback(() => {
+  const removeLink = () => {
     const { LinkID } = orderedLinks[selectedLink];
     setSelectedLink(-1);
     setLinks((linkState) => {
       const itemIndex = linkState.findLastIndex(link => link.LinkID === LinkID);
       linkState.splice(itemIndex, 1);
     });
-  });
+  };
 
   const updateSelectedLink = (idx: number) => {
     if (isLinking) return;
@@ -332,7 +329,7 @@ const LinkFilesTab = () => {
     setSeriesUpdating(false);
   };
 
-  const refreshSelectedSeries = useEventCallback(() => {
+  const refreshSelectedSeries = () => {
     if (!selectedSeries?.ID) return;
     refreshSeries({ anidbID: selectedSeries.ID, force: true, immediate: true })
       .then(async () => {
@@ -343,26 +340,26 @@ const LinkFilesTab = () => {
         console.error(error);
         toast.error('Failed to get series data!');
       });
-  });
+  };
 
-  const editSelectedSeries = useEventCallback(() => {
+  const editSelectedSeries = () => {
     setSelectedSeries({ Type: SeriesTypeEnum.Unknown } as SeriesAniDBSearchResult);
-  });
+  };
 
-  const openRangeFill = useEventCallback(() => {
+  const openRangeFill = () => {
     setShowRangeFillModal(true);
-  });
+  };
 
-  const closeRangeFill = useEventCallback(() => {
+  const closeRangeFill = () => {
     setShowRangeFillModal(false);
-  });
+  };
 
-  const cancelChanges = useEventCallback(() => {
+  const cancelChanges = () => {
     setSelectedSeries({ Type: SeriesTypeEnum.Unknown } as SeriesAniDBSearchResult);
     navigate('../');
-  });
+  };
 
-  const saveChanges = useEventCallback(async () => {
+  const saveChanges = async () => {
     if (isLinking) return;
     setSelectedLink(-1);
     const doesNotExist = selectedSeries.ShokoID === null;
@@ -377,7 +374,7 @@ const LinkFilesTab = () => {
         setLoading({ isLinking: false, isLinkingRunning: false, createdNewSeries: false });
       }
     }
-  });
+  };
 
   const rangeFill = (rangeStart: string, epType: string) => {
     if (toInteger(rangeStart) <= 0) {
@@ -399,12 +396,12 @@ const LinkFilesTab = () => {
     });
   };
 
-  const autoFill = useEventCallback(() => {
-    if (!episodes.length) return;
+  const autoFill = useEffectEvent(() => {
     let hasChanged = false;
     let skipped = false;
     const newLinks: ManualLink[] = [];
     let specials = 0;
+
     forEach(groupBy(orderedLinks, 'FileID'), (link) => {
       const { FileID } = link[0];
       const { details } = showDataMap.get(FileID)!;
@@ -455,12 +452,13 @@ const LinkFilesTab = () => {
         newLinks.push(...link);
       }
     });
+
     if (hasChanged) {
       setLinks(newLinks);
       if (skipped) {
         toast.warning(
           'Auto matching applied',
-          'Some matches could not be filled it. Be sure to vefify the ones that were, and fill in the rest!',
+          'Some matches could not be filled it. Be sure to verify the ones that were, and fill in the rest!',
         );
       } else {
         toast.success('Auto matching applied.', 'Be sure to verify before saving!');
@@ -468,7 +466,13 @@ const LinkFilesTab = () => {
     }
   });
 
-  const makeLinks = useEventCallback(async (seriesId: number, manualLinks: ManualLink[], didNotExist: boolean) => {
+  useEffect(() => {
+    if (selectedSeries.ID && episodes.length) {
+      autoFill();
+    }
+  }, [selectedSeries.ID, episodes.length]);
+
+  const makeLinks = useCallback(async (seriesId: number, manualLinks: ManualLink[], didNotExist: boolean) => {
     setLoading(state => ({ ...state, isLinkingRunning: true }));
 
     const seriesEpisodesData = await seriesEpisodesQuery.refetch();
@@ -548,19 +552,21 @@ const LinkFilesTab = () => {
     setLinks([]);
     setSelectedSeries({} as SeriesAniDBSearchResult);
     navigate('../');
-  });
+  }, [
+    deleteSeries,
+    linkManyFilesToOneEpisode,
+    linkOneFileToManyEpisodes,
+    navigate,
+    seriesEpisodesQuery,
+    setLinks,
+    showDataMap,
+  ]);
 
   useEffect(() => {
     if (links.length === 0) {
       navigate('/webui/Utilities/Unrecognized', { replace: true });
     }
   }, [links, navigate]);
-
-  useEffect(() => {
-    if (selectedSeries.ID && episodes.length) {
-      autoFill();
-    }
-  }, [selectedSeries.ID, episodes.length, autoFill]);
 
   useEffect(() => {
     const seriesId = selectedSeries?.ShokoID;

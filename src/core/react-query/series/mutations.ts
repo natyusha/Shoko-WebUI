@@ -137,16 +137,16 @@ export const useUpdateSeriesTMDBImagesMutation = (seriesId: number) =>
     onSuccess: () => toast.success('TMDB image download queued!'),
   });
 
-export const useRefreshSeriesTraktInfoMutation = (seriesId: number) =>
+export const useSendSeriesWatchStatesToTraktMutation = (seriesId: number) =>
   useMutation({
-    mutationFn: () => axios.post(`Series/${seriesId}/Trakt/Refresh`),
-    onSuccess: () => toast.success('Trakt refresh queued!'),
+    mutationFn: () => axios.post(`Series/${seriesId}/Trakt/SendWatchStates`),
+    onSuccess: () => toast.success('Trakt send watch states queued!'),
   });
 
-export const useSyncSeriesTraktMutation = (seriesId: number) =>
+export const useGetSeriesWatchStatesFromTraktMutation = (seriesId: number) =>
   useMutation({
-    mutationFn: () => axios.post(`Series/${seriesId}/Trakt/Sync`),
-    onSuccess: () => toast.success('Trakt sync queued!'),
+    mutationFn: () => axios.post(`Series/${seriesId}/Trakt/GetWatchStates`),
+    onSuccess: () => toast.success('Trakt get watch states queued!'),
   });
 
 export const useRelocateSeriesFilesMutation = (seriesId: number) =>

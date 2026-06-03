@@ -78,7 +78,7 @@ const seriesColumns: UtilityHeaderType<SeriesType>[] = [
     name: 'Link Count',
     className: 'w-32',
     item: (series) => {
-      const count = series.Sizes.FileSources.Unknown;
+      const count = series.Sizes.ManualLinks;
       return `${count} ${count === 1 ? 'File' : 'Files'}`;
     },
   },
@@ -165,7 +165,7 @@ const Menu = React.memo((props: { selectedFileIds: number[], setSelectedRows: Up
           onClick={() => setSelectedRows({})}
           icon={mdiCloseCircleOutline}
           name="Cancel Selection"
-          highlight
+          highlightType="primary"
         />
       </TransitionDiv>
     </div>
@@ -314,7 +314,7 @@ const ManuallyLinkedTab = () => {
                 skipSort
                 handleRowSelect={handleRowSelect}
                 rowSelection={rowSelection}
-                setSelectedRows={setRowSelection}
+                setRowSelection={setRowSelection}
               />
             )}
           </div>

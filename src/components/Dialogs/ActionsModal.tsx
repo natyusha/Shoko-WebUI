@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import cx from 'classnames';
-import { produce } from 'immer';
 import { map } from 'lodash';
 
 import ModalPanel from '@/components/Panels/ModalPanel';
@@ -8,9 +7,8 @@ import toast from '@/components/Toast';
 import quickActions from '@/core/quick-actions';
 import { useRunActionMutation } from '@/core/react-query/action/mutations';
 import { useInvalidatePlexTokenMutation } from '@/core/react-query/plex/mutations';
-import { useSettingsQuery } from '@/core/react-query/settings/queries';
 
-const defaultActions = {
+const actions = {
   import: {
     title: 'Import',
     data: [
@@ -65,13 +63,6 @@ const defaultActions = {
       'validate-all-images',
     ],
   },
-  trakt: {
-    title: 'Trakt',
-    data: [
-      'send-watch-states-trakt',
-      'get-watch-states-trakt',
-    ],
-  },
   plex: {
     title: 'Plex',
     data: [
@@ -108,7 +99,7 @@ const Action = ({ actionKey, length }: { actionKey: string, length: number }) =>
   return (
     <div
       className={cx(
-        'flex flex-row justify-between gap-y-2 cursor-pointer hover:text-panel-text-primary transition-colors',
+        'flex cursor-pointer flex-row justify-between gap-y-2 transition-colors hover:text-panel-text-primary',
         length > 5 ? 'mr-4' : '',
       )}
       onClick={handleAction}
@@ -124,12 +115,7 @@ const Action = ({ actionKey, length }: { actionKey: string, length: number }) =>
 };
 
 const ActionsModal = ({ onClose, show }: Props) => {
-  const { TraktTv } = useSettingsQuery().data;
   const [activeTab, setActiveTab] = useState('import');
-
-  const actions = produce(defaultActions, (draftState) => {
-    if (!TraktTv.Enabled || !TraktTv.AuthToken) delete draftState.trakt;
-  });
 
   return (
     <ModalPanel
@@ -140,14 +126,14 @@ const ActionsModal = ({ onClose, show }: Props) => {
       noPadding
     >
       <div className="flex h-116 gap-x-6 p-6">
-        <div className="flex shrink-0 flex-col gap-y-6  font-semibold">
+        <div className="flex shrink-0 flex-col gap-y-6 font-semibold">
           <div className="flex flex-col gap-y-1">
             {map(actions, (value, key) => (
               <div
                 className={cx(
                   activeTab === key
-                    ? 'w-30 text-center bg-panel-menu-item-background p-3 rounded-lg text-panel-menu-item-text cursor-pointer'
-                    : 'w-30 text-center p-3 rounded-lg hover:bg-panel-menu-item-background-hover cursor-pointer transition-colors',
+                    ? 'w-30 cursor-pointer rounded-lg bg-panel-menu-item-background p-3 text-center text-panel-menu-item-text'
+                    : 'w-30 cursor-pointer rounded-lg p-3 text-center transition-colors hover:bg-panel-menu-item-background-hover',
                 )}
                 key={key}
                 onClick={() => setActiveTab(key)}

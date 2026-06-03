@@ -1,12 +1,10 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 
 import Button from '@/components/Input/Button';
 import ModalPanel from '@/components/Panels/ModalPanel';
 import TreeView from '@/components/TreeView/TreeView';
 import { setSelectedNode, setStatus } from '@/core/slices/modals/browseFolder';
-
-import type { RootState } from '@/core/store';
+import { useDispatch, useSelector } from '@/core/store';
 
 type Props = {
   onSelect: (value: string) => void;
@@ -15,8 +13,8 @@ type Props = {
 const BrowseFolderModal = ({ onSelect }: Props) => {
   const dispatch = useDispatch();
 
-  const status = useSelector((state: RootState) => state.modals.browseFolder.status);
-  const selectedNode = useSelector((state: RootState) => state.modals.browseFolder.selectedNode);
+  const status = useSelector(state => state.modals.browseFolder.status);
+  const selectedNode = useSelector(state => state.modals.browseFolder.selectedNode);
 
   const handleClose = () => dispatch(setStatus(false));
 
@@ -32,7 +30,7 @@ const BrowseFolderModal = ({ onSelect }: Props) => {
     <ModalPanel
       show={status}
       onRequestClose={() => handleClose()}
-      header="Select Import Folder"
+      header="Select Managed Folder"
       size="sm"
       overlayClassName="!z-[90]"
     >

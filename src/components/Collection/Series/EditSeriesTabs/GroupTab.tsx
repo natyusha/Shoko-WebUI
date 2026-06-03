@@ -23,7 +23,7 @@ import { useSeriesGroupQuery } from '@/core/react-query/series/queries';
 import useFlattenListResult from '@/hooks/useFlattenListResult';
 
 import type { CollectionGroupType } from '@/core/types/api/collection';
-import type { FilterType } from '@/core/types/api/filter';
+import type { CreateOrUpdateFilterType } from '@/core/types/api/filter';
 
 type Props = {
   seriesId: number;
@@ -134,7 +134,7 @@ const ExistingGroup = React.memo((
   </div>
 ));
 
-const getFilter = (query: string): FilterType => ((query === '') ? {} : {
+const getFilter = (query: string): CreateOrUpdateFilterType => ((query === '') ? {} : {
   ApplyAtSeriesLevel: false,
   Expression: {
     Type: 'StringContains',
@@ -206,7 +206,7 @@ const GroupTab = ({ seriesId }: Props) => {
           },
         ]}
       />
-      <div className="mt-2 flex grow select-none overflow-y-auto rounded-lg border border-panel-border bg-panel-input p-6 pr-3">
+      <div className="mt-2 flex grow overflow-y-auto rounded-lg border border-panel-border bg-panel-input p-6 pr-3 select-none">
         <div
           className={cx(
             'flex grow flex-col gap-y-2 overflow-y-auto bg-panel-input',

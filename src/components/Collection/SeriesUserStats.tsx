@@ -57,7 +57,7 @@ const SeriesUserStats = React.memo(({ series }: SeriesInfoProps) => (
           <div className="flex gap-x-1">
             {series.Sizes.Missing.Episodes > 0 && (
               <Link
-                to="episodes?type=Normal&includeMissing=only&includeUnaired=false"
+                to="episodes?type=Episode&includeMissing=only&includeUnaired=false"
                 className="text-panel-text-primary"
               >
                 {formatThousand(series.Sizes.Missing.Episodes)}
@@ -82,7 +82,7 @@ const SeriesUserStats = React.memo(({ series }: SeriesInfoProps) => (
     </div>
 
     <div className="flex items-center justify-between">
-      <div className="font-semibold ">
+      <div className="font-semibold">
         Series Rating&nbsp;
         {series.UserRating?.Type === 'Temporary' && '(Temp)'}
       </div>

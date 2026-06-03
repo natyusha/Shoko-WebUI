@@ -11,16 +11,16 @@ import type { SeriesType } from '@/core/types/api/series';
 
 const TimelineItem = ({ series }: { series: SeriesType }) => {
   const mainPoster = useMainPoster(series);
-  const seriesType = series.AniDB?.Type === SeriesTypeEnum.TVSpecial
-    ? 'TV Special'
-    : series.AniDB?.Type;
+  let seriesType = series.AniDB?.Type as string | undefined;
+  if (seriesType === SeriesTypeEnum.TVSpecial) seriesType = 'TV Special';
+  else if (seriesType === SeriesTypeEnum.MusicVideo) seriesType = 'Music Video';
 
   return (
     <div className="flex gap-x-3" key={series.IDs.ID}>
       <Link to={`/webui/collection/series/${series.IDs.ID}`}>
         <BackgroundImagePlaceholderDiv
           image={mainPoster}
-          className="group h-24 w-[4.4375rem] shrink-0 rounded-lg border border-panel-border drop-shadow-md"
+          className="group h-24 w-17.75 shrink-0 rounded-lg border border-panel-border drop-shadow-md"
           overlayOnHover
           zoomOnHover
         />
@@ -49,7 +49,7 @@ const TimelineItem = ({ series }: { series: SeriesType }) => {
 const TimelineSidebar = ({ isFetching, series }: { isFetching: boolean, series: SeriesType[] }) => (
   <ShokoPanel
     title="Timeline"
-    className="sticky top-24 ml-6 !h-[calc(100vh-18rem)] w-[26.5rem]"
+    className="sticky top-24 ml-6 h-[calc(100vh-18rem)]! w-106"
     contentClassName="gap-y-3"
     isFetching={isFetching}
   >

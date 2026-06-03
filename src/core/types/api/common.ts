@@ -2,7 +2,7 @@ export type ImageType = {
   Source: ImageSourceEnum;
   Type: ImageTypeEnum;
   ID: number;
-  RelativeFilepath: null;
+  Available: boolean;
   Preferred: boolean;
   Width: null;
   Height: null;
@@ -11,7 +11,7 @@ export type ImageType = {
   Source: ImageSourceEnum;
   Type: ImageTypeEnum;
   ID: number;
-  RelativeFilepath: string;
+  Available: boolean;
   Preferred: boolean;
   Width: number;
   Height: number;
@@ -26,7 +26,7 @@ export type ImagesType = {
 };
 
 export type EpisodeImagesType = ImagesType & {
-  Thumbnails: ImageType[];
+  Thumbnails?: ImageType[];
 };
 
 export const enum ImageSourceEnum {
@@ -51,19 +51,6 @@ export type RatingType = {
   Source: string;
   Votes: number;
   Type: 'Permanent' | 'Temporary';
-};
-
-export type FilterType = {
-  IDs: {
-    ParentFilter: number;
-    ID: number;
-  };
-  Locked: boolean;
-  ApplyAtSeriesLevel: boolean;
-  Directory: boolean;
-  HideInAPI: boolean;
-  Name: string;
-  Size: number;
 };
 
 export type LogLineType = {

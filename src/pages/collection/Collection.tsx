@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useParams, useSearchParams } from 'react-router';
 import cx from 'classnames';
 import { cloneDeep, toNumber } from 'lodash';
@@ -23,19 +22,19 @@ import { usePatchSettingsMutation } from '@/core/react-query/settings/mutations'
 import { useSettingsQuery } from '@/core/react-query/settings/queries';
 import { useGroupViewQuery } from '@/core/react-query/webui/queries';
 import { resetFilter } from '@/core/slices/collection';
+import { useDispatch, useSelector } from '@/core/store';
 import { buildFilter } from '@/core/utilities/filter';
 import useFlattenListResult from '@/hooks/useFlattenListResult';
 import useNavigateVoid from '@/hooks/useNavigateVoid';
 
-import type { RootState } from '@/core/store';
-import type { FilterCondition, FilterType, SortingCriteria } from '@/core/types/api/filter';
+import type { CreateOrUpdateFilterType, FilterCondition, SortingCriteria } from '@/core/types/api/filter';
 import type { SeriesType } from '@/core/types/api/series';
 
 const getFilter = (
   query: string,
   filterConditions: (FilterCondition | undefined)[],
   sortingCriteria?: SortingCriteria,
-): FilterType => {
+): CreateOrUpdateFilterType => {
   let finalCondition: FilterCondition | undefined;
   const cleanFilterConditions = filterConditions.filter(condition => !!condition);
   if (query) {
@@ -96,27 +95,32 @@ const Collection = () => {
   const setSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value;
 
-    if (!query.trim()) {
+    if (isSeries) {
+      setSeriesSearch(query);
+    } else {
+      setGroupSearch(query);
+    }
+  };
+
+  const [debouncedGroupSearch] = useDebounceValue(groupSearch.trim(), 200);
+  const [debouncedSeriesSearch] = useDebounceValue(seriesSearch.trim(), 200);
+
+  useEffect(() => {
+    if (!debouncedGroupSearch && !debouncedSeriesSearch) {
       setSearchParams({}, { replace: true });
-      setGroupSearch('');
-      setSeriesSearch('');
       return;
     }
 
     if (isSeries) {
-      setSearchParams({ qs: query }, { replace: true });
-      setSeriesSearch(query);
+      setSearchParams({ qs: debouncedSeriesSearch }, { replace: true });
     } else {
-      setSearchParams({ q: query }, { replace: true });
-      setGroupSearch(query);
+      setSearchParams({ q: debouncedGroupSearch }, { replace: true });
     }
-  };
-  const [debouncedGroupSearch] = useDebounceValue(groupSearch.trim(), 200);
-  const [debouncedSeriesSearch] = useDebounceValue(seriesSearch.trim(), 200);
+  }, [debouncedGroupSearch, debouncedSeriesSearch, isSeries, setSearchParams]);
 
-  const activeFilterFromStore = useSelector((state: RootState) => state.collection.activeFilter) as FilterCondition;
+  const activeFilterFromStore = useSelector(state => state.collection.activeFilter);
   const activeFilter = useMemo(() => {
-    if (!filterId) return undefined;
+    if (!filterId || !activeFilterFromStore) return undefined;
     return activeFilterFromStore;
   }, [activeFilterFromStore, filterId]);
   const filterQuery = useFilterQuery(toNumber(filterId!), !!filterId && !isLiveFilter);
@@ -227,7 +231,7 @@ const Collection = () => {
     }
     const newSettings = cloneDeep(settings);
     newSettings.WebUI_Settings.collection.view = newMode;
-    patchSettings({ newSettings });
+    patchSettings(newSettings);
   };
 
   return (
@@ -271,8 +275,8 @@ const Collection = () => {
               'flex items-start',
               !isSeries && 'transition-all',
               showFilterSidebar
-                ? 'w-[28rem] opacity-100'
-                : 'w-0 opacity-0 overflow-hidden ',
+                ? 'w-md opacity-100'
+                : 'w-0 overflow-hidden opacity-0',
             )}
           >
             <FilterSidebar />

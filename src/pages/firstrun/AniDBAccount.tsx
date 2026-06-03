@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
 
 import Input from '@/components/Input/Input';
 import TransitionDiv from '@/components/TransitionDiv';
 import { useAniDBTestLoginMutation } from '@/core/react-query/settings/mutations';
 import { setSaved as setFirstRunSaved, unsetSaved as unsetFirstRunSaved } from '@/core/slices/firstrun';
+import { useDispatch } from '@/core/store';
 import useFirstRunSettingsContext from '@/hooks/useFirstRunSettingsContext';
 import useNavigateVoid from '@/hooks/useNavigateVoid';
 
@@ -54,7 +54,7 @@ const AniDBAccount = () => {
   return (
     <>
       <title>First Run &gt; AniDB Account | Shoko</title>
-      <TransitionDiv className="flex max-w-[38rem] flex-col justify-center gap-y-6">
+      <TransitionDiv className="flex max-w-152 flex-col justify-center gap-y-6">
         <div className="text-xl font-semibold">Adding Your AniDB Account</div>
         <div className="text-justify">
           Shoko utilizes AniDB to compare file hashes with its vast database, enabling a quick identification and

@@ -20,14 +20,13 @@ const WelcomeModal = (props: Props) => {
     <Modal
       isOpen={show}
       onRequestClose={onClose}
-      shouldCloseOnEsc={false}
       overlayClassName="fixed inset-0 bg-black/50 z-[110]"
       shouldCloseOnOverlayClick={false}
       className="flex h-full items-center justify-center"
     >
       <div className="flex h-fit w-full items-center justify-center">
         <div
-          className="flex h-[66%] w-[37.5rem] flex-col rounded-lg border border-panel-border bg-panel-background drop-shadow-lg"
+          className="flex h-[66%] w-150 flex-col rounded-lg border border-panel-border bg-panel-background drop-shadow-lg"
           onClick={event => event.stopPropagation()}
         >
           <div>

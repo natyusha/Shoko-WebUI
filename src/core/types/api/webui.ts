@@ -41,7 +41,7 @@ export type WebuiSeriesFileSummaryGroupType = {
   FileSource?: string;
   FileLocation?: string;
   FileIsDeprecated?: boolean;
-  ImportFolder?: number;
+  ManagedFolder?: number;
   VideoCodecs?: string;
   VideoBitDepth?: number;
   VideoResolution?: string;
@@ -66,23 +66,20 @@ export type WebuiSeriesFileSummaryGroupType = {
   Locations?: {
     ID: number;
     FileID: number;
-    ImportFolderID: number;
+    ManagedFolderID: number;
     IsAccessible: boolean;
     RelativePath: string;
   }[];
 };
 
 export type WebuiSeriesFileSummaryGroupRangeByType = {
+  Unknown: WebuiSeriesFileSummaryRangeByType;
   Other: WebuiSeriesFileSummaryRangeByType;
-  Normal: WebuiSeriesFileSummaryRangeByType;
+  Episode: WebuiSeriesFileSummaryRangeByType;
   Special: WebuiSeriesFileSummaryRangeByType;
   Trailer: WebuiSeriesFileSummaryRangeByType;
-  ThemeSong: WebuiSeriesFileSummaryRangeByType;
-  OpeningSong: WebuiSeriesFileSummaryRangeByType;
-  EndingSong: WebuiSeriesFileSummaryRangeByType;
+  Credits: WebuiSeriesFileSummaryRangeByType;
   Parody: WebuiSeriesFileSummaryRangeByType;
-  Interview: WebuiSeriesFileSummaryRangeByType;
-  Extra: WebuiSeriesFileSummaryRangeByType;
 };
 
 export type WebuiSeriesFileSummaryRangeByType = {

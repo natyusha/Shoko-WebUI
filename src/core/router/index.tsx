@@ -1,11 +1,11 @@
 /* global globalThis */
 import React, { useEffect, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Navigate, Route, RouterProvider, createBrowserRouter, createRoutesFromElements } from 'react-router';
 import * as Sentry from '@sentry/react';
 
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { useSettingsQuery } from '@/core/react-query/settings/queries';
+import { useSelector } from '@/core/store';
 import { BodyVisibleContext } from '@/hooks/useBodyVisibleContext';
 import SentryErrorBoundaryWrapper from '@/pages/SentryErrorBoundaryWrapper';
 import Collection from '@/pages/collection/Collection';
@@ -22,21 +22,23 @@ import Acknowledgement from '@/pages/firstrun/Acknowledgement';
 import AniDBAccount from '@/pages/firstrun/AniDBAccount';
 import DataCollection from '@/pages/firstrun/DataCollection';
 import FirstRunPage from '@/pages/firstrun/FirstRunPage';
-import ImportFolders from '@/pages/firstrun/ImportFolders';
 import LocalAccount from '@/pages/firstrun/LocalAccount';
+import ManagedFolders from '@/pages/firstrun/ManagedFolders';
 import MetadataSources from '@/pages/firstrun/MetadataSources';
 import StartServer from '@/pages/firstrun/StartServer';
 import LoginPage from '@/pages/login/LoginPage';
 import LogsPage from '@/pages/logs/LogsPage';
 import MainPage from '@/pages/main/MainPage';
 import SettingsPage from '@/pages/settings/SettingsPage';
+import PluginPageEmbed from '@/pages/settings/plugin/PluginPageEmbed';
 import AniDBSettings from '@/pages/settings/tabs/AniDBSettings';
 import ApiKeys from '@/pages/settings/tabs/ApiKeys';
 import CollectionSettings from '@/pages/settings/tabs/CollectionSettings';
 import GeneralSettings from '@/pages/settings/tabs/GeneralSettings';
+import HashingAndReleaseSettings from '@/pages/settings/tabs/HashingAndReleaseSettings';
 import ImportSettings from '@/pages/settings/tabs/ImportSettings';
 import IntegrationsSettings from '@/pages/settings/tabs/IntegrationsSettings';
-import MetadataSitesSettings from '@/pages/settings/tabs/MetadataSitesSettings';
+import TmdbSettings from '@/pages/settings/tabs/TmdbSettings';
 import UserManagementSettings from '@/pages/settings/tabs/UserManagementSettings';
 import UnsupportedPage from '@/pages/unsupported/UnsupportedPage';
 import FileSearch from '@/pages/utilities/FileSearch';
@@ -45,14 +47,13 @@ import Renamer from '@/pages/utilities/Renamer';
 import SeriesWithoutFilesUtility from '@/pages/utilities/SeriesWithoutFilesUtility';
 import IgnoredFilesTab from '@/pages/utilities/UnrecognizedUtilityTabs/IgnoredFilesTab';
 import LinkFilesTab from '@/pages/utilities/UnrecognizedUtilityTabs/LinkFilesTab';
+import LinkFilesWithProvidersTab from '@/pages/utilities/UnrecognizedUtilityTabs/LinkFilesWithProvidersTab';
 import ManuallyLinkedTab from '@/pages/utilities/UnrecognizedUtilityTabs/ManuallyLinkedTab';
 import UnrecognizedTab from '@/pages/utilities/UnrecognizedUtilityTabs/UnrecognizedTab';
 
 import AuthenticatedRoute from './AuthenticatedRoute';
 
-import type { RootState } from '@/core/store';
-
-const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouterV7(createBrowserRouter);
+const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouterV7(createBrowserRouter) as typeof createBrowserRouter;
 
 const router = sentryCreateBrowserRouter(
   createRoutesFromElements(
@@ -69,7 +70,7 @@ const router = sentryCreateBrowserRouter(
           <Route path="anidb-account" element={<AniDBAccount />} />
           <Route path="metadata-sources" element={<MetadataSources />} />
           <Route path="start-server" element={<StartServer />} />
-          <Route path="import-folders" element={<ImportFolders />} />
+          <Route path="managed-folders" element={<ManagedFolders />} />
           <Route path="data-collection" element={<DataCollection />} />
         </Route>
         <Route path="unsupported" element={<UnsupportedPage />} />
@@ -87,10 +88,11 @@ const router = sentryCreateBrowserRouter(
             <Route path="unrecognized" element={<Navigate to="files" replace />} />
             <Route path="unrecognized/files" element={<UnrecognizedTab />} />
             <Route path="unrecognized/files/link" element={<LinkFilesTab />} />
+            <Route path="unrecognized/files/link-with-providers" element={<LinkFilesWithProvidersTab />} />
             <Route path="unrecognized/manually-linked-files" element={<ManuallyLinkedTab />} />
             <Route path="unrecognized/ignored-files" element={<IgnoredFilesTab />} />
-            <Route path="release-management" element={<Navigate to="multiples" replace />} />
-            <Route path="release-management/:itemType" element={<ReleaseManagement />} />
+            <Route path="release-management" element={<Navigate to="MultipleReleases" replace />} />
+            <Route path="release-management/:type" element={<ReleaseManagement />} />
             <Route path="series-without-files" element={<SeriesWithoutFilesUtility />} />
             <Route path="file-search" element={<FileSearch />} />
             <Route path="renamer" element={<Renamer />} />
@@ -117,12 +119,14 @@ const router = sentryCreateBrowserRouter(
             <Route index element={<Navigate to="general" replace />} />
             <Route path="general" element={<GeneralSettings />} />
             <Route path="import" element={<ImportSettings />} />
+            <Route path="hashing-release" element={<HashingAndReleaseSettings />} />
             <Route path="anidb" element={<AniDBSettings />} />
-            <Route path="metadata-sites" element={<MetadataSitesSettings />} />
+            <Route path="tmdb" element={<TmdbSettings />} />
             <Route path="collection" element={<CollectionSettings />} />
             <Route path="integrations" element={<IntegrationsSettings />} />
             <Route path="user-management" element={<UserManagementSettings />} />
             <Route path="api-keys" element={<ApiKeys />} />
+            <Route path="plugin/config/:pluginId/:pageId" element={<PluginPageEmbed />} />
           </Route>
         </Route>
       </Route>
@@ -131,8 +135,8 @@ const router = sentryCreateBrowserRouter(
 );
 
 const Router = () => {
-  const apikey = useSelector((state: RootState) => state.apiSession.apikey);
-  const webuiPreviewTheme = useSelector((state: RootState) => state.misc.webuiPreviewTheme);
+  const apikey = useSelector(state => state.apiSession.apikey);
+  const webuiPreviewTheme = useSelector(state => state.misc.webuiPreviewTheme);
 
   const settingsQuery = useSettingsQuery(!!apikey);
   const { theme } = settingsQuery.data.WebUI_Settings;

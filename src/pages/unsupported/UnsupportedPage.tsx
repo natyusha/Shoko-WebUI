@@ -1,13 +1,12 @@
 import React from 'react';
-import { useDispatch } from 'react-redux';
 
 import ShokoMascot from '@/../images/shoko_mascot.png';
 import Button from '@/components/Input/Button';
 import Events from '@/core/events';
 import { useVersionQuery } from '@/core/react-query/init/queries';
 import { useUpdateWebuiMutation } from '@/core/react-query/webui/mutations';
-
-const { VITE_MIN_SERVER_VERSION } = import.meta.env;
+import { useDispatch } from '@/core/store';
+import { getMinimumServerVersion } from '@/core/util';
 
 const UnsupportedPage = () => {
   const dispatch = useDispatch();
@@ -29,7 +28,7 @@ const UnsupportedPage = () => {
     <>
       <title>Unsupported Version | Shoko</title>
       <div className="relative flex grow items-center justify-center overflow-hidden p-6">
-        <div className="z-20 flex h-full max-w-[56.4375rem] flex-col items-center justify-center gap-y-4 overflow-y-auto md:gap-y-6">
+        <div className="z-20 flex h-full max-w-225.75 flex-col items-center justify-center gap-y-4 overflow-y-auto md:gap-y-6">
           <div className="text-2xl text-panel-text md:text-5xl">STOP!</div>
           <div className="text-2xl text-panel-text md:text-5xl">You Shall Not Pass!</div>
           <div className="flex flex-col gap-y-4">
@@ -66,7 +65,7 @@ const UnsupportedPage = () => {
                 {versionQuery.data.Server.Version}
                 <br />
                 Minimum Supported Server Version:&nbsp;
-                {VITE_MIN_SERVER_VERSION}
+                {getMinimumServerVersion()}
                 <br />
                 Web UI Version:&nbsp;
                 {versionQuery.data.WebUI?.Version}
@@ -87,7 +86,7 @@ const UnsupportedPage = () => {
         <img
           src={ShokoMascot}
           alt="mascot"
-          className="absolute -bottom-40 -right-36 z-10 opacity-30"
+          className="absolute -right-36 -bottom-40 z-10 opacity-30"
         />
       </div>
     </>

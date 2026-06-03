@@ -1,5 +1,8 @@
 import type { Layout } from 'react-grid-layout';
 
+import type { ReleaseChannelType } from '@/core/types/api/init';
+import type { ManualLinkProviderType } from '@/core/types/utilities/unrecognized-utility';
+
 export type SettingsDatabaseType = {
   MySqliteDirectory: string;
   DatabaseBackupDirectory: string;
@@ -28,7 +31,6 @@ export type SettingsAnidbType = {
 export type SettingsAnidbDownloadType = {
   DownloadCharacters: boolean;
   DownloadCreators: boolean;
-  DownloadReleaseGroups: boolean;
   DownloadRelatedAnime: boolean;
   MaxRelationDepth: number;
 };
@@ -58,14 +60,6 @@ export type SettingsAnidbUpdateType = {
   File_UpdateFrequency: SettingsUpdateFrequencyType;
   Notification_UpdateFrequency: SettingsUpdateFrequencyType;
   Notification_HandleMovedFiles: boolean;
-};
-
-export type SettingsTraktType = {
-  Enabled: boolean;
-  TokenExpirationDate: string;
-  SyncFrequency: SettingsUpdateFrequencyType;
-  AuthToken: string;
-  RefreshToken: string;
 };
 
 export type SettingsTMDBType = {
@@ -314,11 +308,12 @@ export type SettingsPlexType = {
   Server: string;
 };
 
-export type SettingsLogRotatorType = {
-  Enabled: boolean;
-  Zip: boolean;
-  Delete: boolean;
-  Delete_Days: string;
+export type SettingsLoggingType = {
+  RotationEnabled: boolean;
+  RotationCompress: boolean;
+  RotationDeleteEnabled: boolean;
+  RotationDeleteDays?: number;
+  TraceLog: boolean;
 };
 
 export type SettingsImportType = {
@@ -354,15 +349,13 @@ export type SettingsServerType = {
     & SettingsAnidbUpdateType;
   TMDB: SettingsTMDBType;
   Language: SettingsLanguageType;
-  TraktTv: SettingsTraktType;
   Plex: SettingsPlexType;
-  LogRotator: SettingsLogRotatorType;
+  Logging: SettingsLoggingType;
   AutoGroupSeries: boolean;
   AutoGroupSeriesUseScoreAlgorithm: boolean;
   AutoGroupSeriesRelationExclusions: string[];
   Import: SettingsImportType;
   LoadImageMetadata: boolean;
-  TraceLog: boolean;
   Plugins: PluginSettingsType;
 };
 
@@ -371,10 +364,12 @@ export type WebUISettingsType = {
   settingsRevision: number;
   theme: string;
   toastPosition: 'top-right' | 'bottom-right';
-  updateChannel: 'Stable' | 'Dev';
+  updateChannel: ReleaseChannelType;
+  serverUpdateChannel: ReleaseChannelType;
   layout: {
     dashboard: Partial<Record<string, Layout>>;
   };
+  releaseInfoProviders: ManualLinkProviderType[];
   collection: {
     view: 'poster' | 'list';
     poster: {
@@ -406,7 +401,7 @@ export type WebUISettingsType = {
     hideRecentlyImported: boolean;
     hideCollectionStats: boolean;
     hideMediaType: boolean;
-    hideImportFolders: boolean;
+    hideManagedFolders: boolean;
     hideShokoNews: boolean;
     hideContinueWatching: boolean;
     hideNextUp: boolean;

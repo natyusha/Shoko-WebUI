@@ -1,26 +1,29 @@
 /* global globalThis */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import { NavLink, Outlet, useLocation } from 'react-router';
 import useMeasure from 'react-use-measure';
-import { mdiLoading } from '@mdi/js';
+import { mdiLoading, mdiOpenInNew } from '@mdi/js';
 import { Icon } from '@mdi/react';
-import { isEqual } from 'lodash';
+import cx from 'classnames';
+import { groupBy, isEmpty, isEqual, map } from 'lodash';
 import { useDebounceValue } from 'usehooks-ts';
 
 import Button from '@/components/Input/Button';
 import toast from '@/components/Toast';
+import { usePluginPagesQuery } from '@/core/react-query/plugin/queries';
 import { usePatchSettingsMutation } from '@/core/react-query/settings/mutations';
 import { useSettingsQuery } from '@/core/react-query/settings/queries';
 import { setItem as setMiscItem } from '@/core/slices/misc';
+import { useDispatch } from '@/core/store';
 
 import type { PluginRenamerSettingsType } from '@/core/types/api/settings';
 
 const items = [
   { name: 'General', path: 'general' },
   { name: 'Import', path: 'import' },
+  { name: 'Hashing & Release', path: 'hashing-release' },
   { name: 'AniDB', path: 'anidb' },
-  { name: 'Metadata Sites', path: 'metadata-sites' },
+  { name: 'TMDB', path: 'tmdb' },
   { name: 'Collection', path: 'collection' },
   { name: 'Integrations', path: 'integrations' },
   // { name: 'Display', path: 'display' },
@@ -28,7 +31,6 @@ const items = [
   // { name: 'Themes', path: 'themes' },
   { name: 'API Keys', path: 'api-keys' },
 ];
-
 const SettingsPage = () => {
   const dispatch = useDispatch();
 
@@ -39,6 +41,10 @@ const SettingsPage = () => {
   const settingsQuery = useSettingsQuery();
   const settings = settingsQuery.data;
   const { isPending: settingsPatchPending, mutate: patchSettings } = usePatchSettingsMutation();
+
+  const pluginPages = usePluginPagesQuery().data;
+
+  const pluginGroups = groupBy(pluginPages, page => page.PluginInfo.ID);
 
   const [newSettings, setNewSettings] = useState(settings);
 
@@ -57,6 +63,15 @@ const SettingsPage = () => {
   );
   const [debouncedUnsavedChanges] = useDebounceValue(unsavedChanges, 100);
 
+  const isSpecialPage = useMemo(() => {
+    const path = pathname.split('/').pop();
+    if (!path) return false;
+    if (pathname.includes('settings/dynamic/') || pathname.includes('settings/plugin/')) return true;
+    return ['user-management', 'api-keys', 'hashing-release', 'dynamic'].includes(path);
+  }, [pathname]);
+
+  const isPluginConfigPage = pathname.includes('settings/plugin/config/');
+
   // Use debounced value for unsaved changes to avoid flashing the toast for certain changes
   useEffect(() => {
     if (!debouncedUnsavedChanges) {
@@ -65,8 +80,8 @@ const SettingsPage = () => {
     }
 
     toastId.current = toast.info(
-      'Unsaved Changes',
-      'Please save before leaving this page.',
+      'Unsaved Changes for Core Settings',
+      'Please save before leaving the settings.',
       { autoClose: false, position: 'top-right' },
       true,
     );
@@ -76,12 +91,16 @@ const SettingsPage = () => {
     if (toastId.current) toast.dismiss(toastId.current);
   }, []);
 
-  const updateSetting = (type: string, key: string, value: string | string[] | boolean | PluginRenamerSettingsType) => {
+  const updateSetting = (
+    type: string,
+    key: string,
+    value: string | string[] | number | boolean | PluginRenamerSettingsType | undefined,
+  ) => {
     if (key === 'theme' && typeof value === 'string') {
       globalThis.localStorage.setItem('theme', value);
     }
 
-    const tempSettings: Record<string, string | string[] | boolean | PluginRenamerSettingsType> = {
+    const tempSettings: Record<string, string | string[] | number | boolean | PluginRenamerSettingsType | undefined> = {
       ...(newSettings[type] as Record<string, string | string[] | boolean>),
       [key]: value,
     };
@@ -91,12 +110,6 @@ const SettingsPage = () => {
       dispatch(setMiscItem({ webuiPreviewTheme: value }));
     }
   };
-
-  const isShowFooter = useMemo(() => {
-    const path = pathname.split('/').pop();
-    if (!path) return true;
-    return !['user-management', 'api-keys'].includes(path);
-  }, [pathname]);
 
   const settingContext = {
     newSettings,
@@ -137,7 +150,7 @@ const SettingsPage = () => {
       return;
     }
 
-    patchSettings({ newSettings });
+    patchSettings(newSettings);
   };
 
   const handleCancel = () => {
@@ -149,9 +162,11 @@ const SettingsPage = () => {
 
   return (
     <div className="flex min-h-full grow justify-center gap-x-6" ref={containerRef}>
-      <div className="relative top-0 z-10 flex w-[21.875rem] flex-col gap-y-4 rounded-lg border border-panel-border bg-panel-background-transparent p-6 font-semibold">
+      <div className="relative top-0 z-10 flex w-87.5 flex-col gap-y-4 rounded-lg border border-panel-border bg-panel-background-transparent p-6 font-semibold">
         <div className="sticky top-6">
-          <div className="mb-8 text-center text-xl opacity-100">Settings</div>
+          <div className="mb-8 text-center text-xl">
+            Core Settings
+          </div>
           <div className="flex flex-col items-center gap-y-2">
             {items.map(item => (
               <NavLink
@@ -164,10 +179,66 @@ const SettingsPage = () => {
                 {item.name}
               </NavLink>
             ))}
+            {!isEmpty(pluginGroups) && (
+              <div className="mt-6 w-full border-t border-panel-border pt-6">
+                <div className="mb-4 text-center text-lg">Plugins</div>
+                {map(pluginGroups, (group, groupId) => (
+                  <div className="mb-4 flex flex-col gap-y-2" key={groupId}>
+                    <div className="px-2 text-center text-sm text-panel-text-primary opacity-60">
+                      {group[0].PluginInfo.Name}
+                    </div>
+                    {group.map(page => (
+                      page.CanEmbed
+                        ? (
+                          <NavLink
+                            to={`plugin/config/${groupId}/${page.ID}`}
+                            className={({ isActive }) => (isActive
+                              ? 'relative w-full text-center bg-panel-menu-item-background py-2 px-10 rounded-lg text-panel-menu-item-text'
+                              : 'relative w-full text-center py-2 px-10 rounded-lg hover:bg-panel-menu-item-background-hover transition-colors')}
+                            key={page.ID}
+                          >
+                            {page.Name}
+                            <button
+                              type="button"
+                              data-tooltip-id="tooltip"
+                              data-tooltip-content={`Open ${page.Name} in new tab`}
+                              onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                window.open(page.Url, '_blank', 'noopener,noreferrer');
+                              }}
+                              className="absolute top-1/2 right-2 flex -translate-y-1/2 items-center justify-center rounded-md p-1 text-panel-text-primary opacity-60 transition-opacity hover:opacity-100"
+                            >
+                              <Icon path={mdiOpenInNew} size={0.7} />
+                            </button>
+                          </NavLink>
+                        )
+                        : (
+                          <a
+                            href={page.Url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex w-full items-center justify-center gap-x-2 rounded-lg p-2 transition-colors hover:bg-panel-menu-item-background-hover"
+                            key={page.ID}
+                          >
+                            {page.Name}
+                            <Icon path={mdiOpenInNew} size={0.7} />
+                          </a>
+                        )
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
-      <div className="flex min-h-full w-[43.75rem] flex-col gap-y-6 overflow-y-visible rounded-lg border border-panel-border bg-panel-background-transparent p-6">
+      <div
+        className={cx(
+          'flex min-h-full w-175 flex-col gap-y-6 overflow-y-visible rounded-lg border border-panel-border bg-panel-background-transparent',
+          !isPluginConfigPage && 'p-6',
+        )}
+      >
         {settingsQuery.isPending
           ? (
             <div className="flex grow items-center justify-center text-panel-text-primary">
@@ -179,7 +250,7 @@ const SettingsPage = () => {
               <Outlet
                 context={settingContext}
               />
-              {isShowFooter && (
+              {!isSpecialPage && (
                 <div className="flex justify-end gap-x-3 font-semibold">
                   <Button
                     onClick={handleCancel}
@@ -204,7 +275,7 @@ const SettingsPage = () => {
       </div>
       <div
         id="settings-background"
-        className="fixed left-0 top-0 -z-10 w-full bg-cover bg-fixed opacity-20"
+        className="fixed top-0 left-0 -z-10 w-full bg-cover bg-fixed opacity-20"
         // If this height feels like a hack, you figure out how to fix it
         // 3rem accounts for the top and bottom padding of the container (1.5rem each side)
         style={{

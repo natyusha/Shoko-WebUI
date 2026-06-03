@@ -1,11 +1,11 @@
 import React from 'react';
-import { useDispatch } from 'react-redux';
 import { Link, useParams } from 'react-router';
 import { mdiChevronRight } from '@mdi/js';
 import { Icon } from '@mdi/react';
 import cx from 'classnames';
 
 import { resetFilter } from '@/core/slices/collection';
+import { useDispatch } from '@/core/store';
 
 type Props = {
   count: number;
@@ -49,7 +49,7 @@ const CollectionTitle = React.memo(({ count, filterActive, filterName, groupName
         <>
           <Icon className="flex-none" path={mdiChevronRight} size={1} />
           <span
-            className={cx('truncate', filterActive && 'text-panel-text-primary cursor-pointer')}
+            className={cx('truncate', filterActive && 'cursor-pointer text-panel-text-primary')}
             onClick={handlFilterReset}
           >
             {filterName}

@@ -19,7 +19,7 @@ type Props = {
 const AniDBEpisode = React.memo(({ episode, extra, isOdd, onIconClick }: Props) => (
   <div
     className={cx(
-      'flex items-center grow basis-0 gap-x-6 rounded-lg border border-panel-border p-4',
+      'flex grow basis-0 items-center gap-x-6 rounded-lg border border-panel-border p-4',
       isOdd ? 'bg-panel-background-alt' : 'bg-panel-background',
     )}
   >
@@ -29,15 +29,15 @@ const AniDBEpisode = React.memo(({ episode, extra, isOdd, onIconClick }: Props) 
     <div className={cx('w-8 shrink-0', extra && 'opacity-65')}>{padNumber(episode.AniDB?.EpisodeNumber ?? 0)}</div>
 
     <div
-      className={cx('flex flex-col grow', extra && 'opacity-65')}
+      className={cx('flex grow flex-col', extra && 'opacity-65')}
       data-tooltip-id="tooltip"
-      data-tooltip-content={episode.Name}
+      data-tooltip-content={episode.AniDB?.Title ?? `Episode ${episode.AniDB?.EpisodeNumber ?? '??'}`}
     >
       <div className="line-clamp-1 text-xs font-semibold opacity-65">
         {episode.AniDB?.AirDate ?? 'Airdate Unknown'}
       </div>
       <div className="line-clamp-1">
-        {episode.Name}
+        {episode.AniDB?.Title ?? `Episode ${episode.AniDB?.EpisodeNumber ?? '??'}`}
       </div>
     </div>
 

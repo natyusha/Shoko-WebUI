@@ -4,7 +4,7 @@ import { mdiCogOutline, mdiLoading, mdiOpenInNew, mdiPencilCircleOutline } from 
 import { Icon } from '@mdi/react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import cx from 'classnames';
-import { debounce, every, filter, forEach, get, groupBy, isEqual, map, reduce, some, toNumber } from 'lodash';
+import { debounce, every, filter, forEach, groupBy, isEqual, map, reduce, some, toNumber } from 'lodash';
 import { useImmer } from 'use-immer';
 import { useToggle } from 'usehooks-ts';
 
@@ -53,7 +53,7 @@ const TmdbLinking = () => {
 
   const seriesQuery = useSeriesQuery(seriesId, { includeDataFrom: ['AniDB'] }, !!seriesId);
 
-  const [toggledSettingsModal, toggleShowSettingsModal] = useToggle();
+  const [showSettingsModal, toggleSettingsModal] = useToggle();
   const showSettings = type === 'Show' && tmdbId > 0;
 
   const [createInProgress, setCreateInProgress] = useState(false);
@@ -332,7 +332,7 @@ const TmdbLinking = () => {
         {(seriesQuery.data && episodesQuery.data) && (
           <div
             className={cx(
-              'grid gap-2 grid-rows-[auto_minmax(0,1fr)]',
+              'grid grid-rows-[auto_minmax(0,1fr)] gap-2',
               type === 'Show' ? 'grid-cols-[minmax(0,1fr)_3.5rem_minmax(0,1fr)]' : 'grid-cols-2',
             )}
           >
@@ -400,13 +400,13 @@ const TmdbLinking = () => {
                           ? (
                             <>
                               <TmdbShowSettingsModal
-                                show={toggledSettingsModal}
+                                show={showSettingsModal}
                                 showId={tmdbId}
-                                onClose={toggleShowSettingsModal}
+                                onClose={toggleSettingsModal}
                               />
                               <Button
                                 className="text-panel-icon-action"
-                                onClick={toggleShowSettingsModal}
+                                onClick={toggleSettingsModal}
                                 tooltip="Open Settings"
                               >
                                 <Icon path={mdiCogOutline} size={1} />
@@ -438,12 +438,12 @@ const TmdbLinking = () => {
               className={cx(
                 'relative w-full',
                 type === 'Movie' ? 'col-span-2' : 'col-span-3',
-                tmdbId === 0 && '!col-span-1',
+                tmdbId === 0 && 'col-span-1!',
               )}
               style={{ height: rowVirtualizer.getTotalSize() }}
             >
               {virtualItems.map((virtualItem) => {
-                const episode = get(episodes, virtualItem.index, undefined);
+                const episode = episodes[virtualItem.index];
                 const isOdd = virtualItem.index % 2 === 1;
 
                 if (!episode && !episodesQuery.isFetchingNextPage) fetchNextPageDebounced();
@@ -459,7 +459,7 @@ const TmdbLinking = () => {
                 return (
                   <div
                     className={cx(
-                      'absolute left-0 top-0 flex w-full gap-x-2',
+                      'absolute top-0 left-0 flex w-full gap-x-2',
                       episode && type === 'Show' && 'flex-col gap-y-2',
                     )}
                     style={{
@@ -475,7 +475,7 @@ const TmdbLinking = () => {
                         (_, index) => (
                           <div
                             key={`episode-${episode.IDs.AniDB}-${index}`}
-                            className="relative left-0 top-0 flex w-full gap-x-2"
+                            className="relative top-0 left-0 flex w-full gap-x-2"
                           >
                             <EpisodeRow
                               episode={episode}

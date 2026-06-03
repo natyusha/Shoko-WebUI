@@ -1,0 +1,213 @@
+import React, { useState } from 'react';
+import { mdiFolderOpen } from '@mdi/js';
+import { find } from 'lodash';
+
+import Button from '@/components/Input/Button';
+import Checkbox from '@/components/Input/Checkbox';
+import Input from '@/components/Input/Input';
+import Select from '@/components/Input/Select';
+import ModalPanel from '@/components/Panels/ModalPanel';
+import toast from '@/components/Toast';
+import {
+  useCreateManagedFolderMutation,
+  useDeleteManagedFolderMutation,
+  useUpdateManagedFolderMutation,
+} from '@/core/react-query/managed-folder/mutations';
+import { useManagedFoldersQuery } from '@/core/react-query/managed-folder/queries';
+import { setStatus as setBrowseStatus } from '@/core/slices/modals/browseFolder';
+import { setStatus } from '@/core/slices/modals/managedFolder';
+import { useDispatch, useSelector } from '@/core/store';
+
+import BrowseFolderModal from './BrowseFolderModal';
+import ConfirmationPromptModal from './ConfirmationPromptModal';
+
+import type { ManagedFolderType } from '@/core/types/api/managed-folder';
+
+const defaultManagedFolder = {
+  WatchForNewFiles: false,
+  DropFolderType: 'None',
+  Path: '',
+  Name: '',
+  ID: 0,
+} as ManagedFolderType;
+
+const ManagedFolderModal = () => {
+  const dispatch = useDispatch();
+
+  const { ID, edit, status } = useSelector(state => state.modals.managedFolder);
+
+  const managedFolderQuery = useManagedFoldersQuery();
+  const managedFolders = managedFolderQuery?.data ?? [] as ManagedFolderType[];
+
+  const { isPending: isCreatePending, mutate: createFolder } = useCreateManagedFolderMutation();
+  const { isPending: isDeletePending, mutateAsync: deleteFolder } = useDeleteManagedFolderMutation();
+  const { isPending: isUpdatePending, mutate: updateFolder } = useUpdateManagedFolderMutation();
+
+  const [managedFolder, setManagedFolder] = useState(defaultManagedFolder);
+  const [keepAssociatedFileRecords, setKeepAssociatedFileRecords] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const getFolderDetails = () => {
+    setManagedFolder(defaultManagedFolder);
+    setKeepAssociatedFileRecords(false);
+    setShowDeleteConfirm(false);
+
+    if (edit) {
+      const folderDetails = find(managedFolders, { ID }) ?? {};
+      setManagedFolder({ ...managedFolder, ...folderDetails });
+    }
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const name = event.target.id;
+    const value = name === 'WatchForNewFiles' ? event.target.value === '1' : event.target.value;
+    setManagedFolder({ ...managedFolder, [name]: value });
+  };
+
+  const handleBrowse = () => dispatch(setBrowseStatus(true));
+  const handleClose = () => dispatch(setStatus(false));
+
+  const handleDelete = async () => {
+    if (!ID) return;
+    await deleteFolder({ folderId: ID, removeRecords: !keepAssociatedFileRecords })
+      .then(() => {
+        toast.success('Managed folder deleted!');
+        dispatch(setStatus(false));
+      })
+      .catch(() => {
+        toast.error('Failed to delete managed folder.');
+      });
+  };
+
+  const handleSave = () => {
+    if (edit) {
+      updateFolder(managedFolder, {
+        onSuccess: () => {
+          toast.success('Managed folder edited!');
+          dispatch(setStatus(false));
+        },
+      });
+    } else {
+      createFolder(managedFolder, {
+        onSuccess: () => {
+          toast.success('Managed folder added!');
+          dispatch(setStatus(false));
+        },
+      });
+    }
+  };
+
+  const onFolderSelect = (Path: string) => setManagedFolder({ ...managedFolder, Path });
+  const isLoading = isCreatePending || isDeletePending || isUpdatePending;
+
+  return (
+    <>
+      <ModalPanel
+        show={status}
+        onRequestClose={handleClose}
+        onAfterOpen={() => getFolderDetails()}
+        header={edit ? 'Edit Managed Folder' : 'Add New Managed Folder'}
+        size="sm"
+        noPadding
+      >
+        <div>
+          <div className="flex flex-col gap-y-6 p-6">
+            <Input
+              id="Name"
+              value={managedFolder.Name}
+              label="Name"
+              type="text"
+              placeholder="Folder name"
+              onChange={handleInputChange}
+              className="w-full"
+            />
+            <Input
+              id="Path"
+              value={managedFolder.Path}
+              label="Location"
+              type="text"
+              placeholder="Location"
+              onChange={handleInputChange}
+              className="w-full"
+              endIcons={[{ icon: mdiFolderOpen, onClick: handleBrowse }]}
+            />
+            <Select
+              label="Drop Type"
+              id="DropFolderType"
+              value={managedFolder.DropFolderType ?? 'None'}
+              onChange={handleInputChange}
+              className="w-full"
+            >
+              <option value="None">None</option>
+              <option value="Source">Source</option>
+              <option value="Destination">Destination</option>
+              <option value="Both">Both</option>
+            </Select>
+            <Select
+              label="Watch For New Files"
+              id="WatchForNewFiles"
+              value={managedFolder.WatchForNewFiles ? 1 : 0}
+              onChange={handleInputChange}
+              className="w-full"
+            >
+              <option value={0}>No</option>
+              <option value={1}>Yes</option>
+            </Select>
+          </div>
+          <div className="rounded-b-lg border-t border-panel-border bg-panel-background-alt p-6">
+            <div className="flex justify-end gap-x-3 font-semibold">
+              {edit && (
+                <Button onClick={() => setShowDeleteConfirm(true)} buttonType="danger" buttonSize="normal">
+                  Delete
+                </Button>
+              )}
+              <Button onClick={handleClose} buttonType="secondary" buttonSize="normal">Cancel</Button>
+              <Button
+                onClick={handleSave}
+                buttonType="primary"
+                buttonSize="normal"
+                disabled={managedFolder.Name === '' || managedFolder.Path === '' || isLoading}
+              >
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      </ModalPanel>
+      <ConfirmationPromptModal
+        onConfirm={handleDelete}
+        onClose={() => setShowDeleteConfirm(false)}
+        show={showDeleteConfirm}
+        title="Delete Managed Folder"
+        confirmButtonType="danger"
+        confirmText="Delete"
+      >
+        <div>
+          Are you sure you want to delete the managed folder&nbsp;
+          <span className="font-semibold text-panel-text-important">{managedFolder.Name}</span>
+          ?
+        </div>
+        <div className="flex flex-col gap-y-1 rounded-lg border border-panel-border bg-panel-background-alt p-4">
+          <div className="text-sm opacity-65">Location</div>
+          <div className="break-all text-panel-text-important">{managedFolder.Path}</div>
+        </div>
+        <div className="flex flex-col gap-y-2">
+          <Checkbox
+            id="keep-associated-file-records"
+            isChecked={keepAssociatedFileRecords}
+            onChange={event => setKeepAssociatedFileRecords(event.target.checked)}
+            label="Keep associated file records"
+            labelRight
+          />
+          <div className="text-sm opacity-65">
+            Keep VideoLocals, DuplicateFiles, and related records for this folder. Use this when migrating files to a
+            new location.
+          </div>
+        </div>
+      </ConfirmationPromptModal>
+      <BrowseFolderModal onSelect={onFolderSelect} />
+    </>
+  );
+};
+
+export default ManagedFolderModal;

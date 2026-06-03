@@ -17,6 +17,7 @@ export type CollectionGroupType = {
   Name: string;
   Size: number;
   Sizes: GroupSizesType;
+  TotalSize: number;
 };
 
 export type GroupSizesType = SeriesSizesType & {
@@ -32,17 +33,5 @@ export type GroupSizesSeriesTypesType = {
   Web: number;
   Movie: number;
   OVA: number;
-};
-
-export type CollectionFilterType = {
-  IDs: {
-    ParentFilter: number | null;
-    ID: number;
-  };
-  IsLocked: boolean;
-  ApplyAtSeriesLevel: boolean;
-  IsDirectory: boolean;
-  IsHidden: boolean;
-  Name: string;
-  Size: number;
+  MusicVideo: number;
 };

@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router';
 import { Slide, ToastContainer } from 'react-toastify';
 import {
@@ -21,16 +20,15 @@ import ShokoIcon from '@/components/ShokoIcon';
 import { useLoginMutation } from '@/core/react-query/auth/mutations';
 import { useRandomImageMetadataQuery } from '@/core/react-query/image/queries';
 import { useServerStatusQuery, useVersionQuery } from '@/core/react-query/init/queries';
+import { useSelector } from '@/core/store';
 import { ImageTypeEnum } from '@/core/types/api/common';
 import useNavigateVoid from '@/hooks/useNavigateVoid';
-
-import type { RootState } from '@/core/store';
 
 const LoginPage = () => {
   const navigate = useNavigateVoid();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const apiSession = useSelector((state: RootState) => state.apiSession);
+  const apiSession = useSelector(state => state.apiSession);
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -103,9 +101,7 @@ const LoginPage = () => {
     }
 
     if (versionQuery.data.Server.ReleaseChannel !== 'Stable') {
-      return `${versionQuery.data.Server.Version}-${versionQuery.data.Server.ReleaseChannel} (${
-        versionQuery.data.Server.Commit?.slice(0, 7)
-      })`;
+      return `${versionQuery.data.Server.Version} (${versionQuery.data.Server.Commit?.slice(0, 7)})`;
     }
 
     return versionQuery.data.Server.Version;
@@ -118,13 +114,13 @@ const LoginPage = () => {
         position="bottom-right"
         autoClose={4000}
         transition={Slide}
-        className="mt-20 !w-[29.5rem]"
+        className="mt-20 w-118!"
         closeButton={false}
         icon={false}
       />
       <div className="relative flex h-screen w-screen flex-col items-center justify-center gap-y-2">
         {loginError && (
-          <div className="flex w-full max-w-[50rem] justify-center gap-x-2 rounded-lg border border-panel-border bg-panel-background-transparent p-4 drop-shadow-md">
+          <div className="flex w-full max-w-200 justify-center gap-x-2 rounded-lg border border-panel-border bg-panel-background-transparent p-4 drop-shadow-md">
             <Icon className="text-panel-text-danger" path={mdiAlertCircleOutline} size={1} />
             <div className="font-semibold text-panel-text-danger">
               Invalid Username or Password. Try again.
@@ -132,7 +128,7 @@ const LoginPage = () => {
           </div>
         )}
         <div className="flex flex-col items-center rounded-lg border border-panel-border bg-panel-background-transparent drop-shadow-md">
-          <div className="flex w-[50rem] flex-row items-center gap-x-6 p-6">
+          <div className="flex w-200 flex-row items-center gap-x-6 p-6">
             <div className="flex w-80 flex-col items-center gap-y-6 py-6">
               <ShokoIcon className="size-32" />
               <div className="flex flex-col gap-y-1 text-center font-semibold">
@@ -202,7 +198,7 @@ const LoginPage = () => {
                   <Icon path={mdiCloseCircleOutline} className="shrink-0 text-panel-text-warning" size={4} />
                   <div className="mt-2 text-xl font-semibold">Server startup failed!</div>
                   Check the error message below
-                  <div className="overflow-y-auto break-all text-lg font-semibold">
+                  <div className="overflow-y-auto text-lg font-semibold break-all">
                     {serverStatusQuery.data?.StartupMessage ?? 'Unknown'}
                   </div>
                 </div>
@@ -238,7 +234,7 @@ const LoginPage = () => {
             <div className="flex gap-x-2">
               <div
                 className={cx(
-                  'flex gap-x-2 items-center font-semibold max-w-[23rem]',
+                  'flex max-w-92 items-center gap-x-2 font-semibold',
                   seriesId && 'cursor-pointer text-panel-text-primary',
                 )}
                 onClick={setRedirect}
@@ -289,7 +285,7 @@ const LoginPage = () => {
         </div>
         <div
           className={cx(
-            'fixed left-0 top-0 -z-10 h-full w-full opacity-20',
+            'fixed top-0 left-0 -z-10 size-full opacity-20',
             imageUrl === 'default' && 'login-image-default',
           )}
           style={imageUrl !== '' && imageUrl !== 'default'

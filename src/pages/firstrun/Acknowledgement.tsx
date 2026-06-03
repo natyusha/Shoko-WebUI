@@ -1,10 +1,10 @@
 import React from 'react';
-import { useDispatch } from 'react-redux';
 
 import Button from '@/components/Input/Button';
 import TransitionDiv from '@/components/TransitionDiv';
 import { useServerStatusQuery } from '@/core/react-query/init/queries';
 import { setSaved as setFirstRunSaved } from '@/core/slices/firstrun';
+import { useDispatch } from '@/core/store';
 import useNavigateVoid from '@/hooks/useNavigateVoid';
 
 const Acknowledgement = () => {
@@ -22,7 +22,7 @@ const Acknowledgement = () => {
   return (
     <>
       <title>First Run &gt; Acknowledgement | Shoko</title>
-      <TransitionDiv className="flex max-w-[38rem] flex-col justify-center gap-y-6 text-justify">
+      <TransitionDiv className="flex max-w-152 flex-col justify-center gap-y-6 text-justify">
         <div className="text-xl font-semibold">Acknowledgement</div>
         <div>
           It is important to clarify that Shoko is an anime cataloging program and not a standalone streaming service.

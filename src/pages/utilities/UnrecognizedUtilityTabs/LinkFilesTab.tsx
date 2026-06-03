@@ -587,12 +587,12 @@ const LinkFilesTab = () => {
   const renderStaticFileLinks = () =>
     map(orderedLinks, (link, idx) => {
       const file = find(selectedRows, ['ID', link.FileID]);
-      const path = file?.Locations?.[0].RelativePath ?? '<missing file path>';
+      const path = file?.Locations?.[0]?.RelativePath ?? '<missing file path>';
       return (
         <div
           title={path}
           className={cx([
-            'p-4 w-full odd:bg-panel-background-alt even:bg-panel-background border border-panel-border rounded-lg leading-5',
+            'w-full rounded-lg border border-panel-border p-4 leading-5 odd:bg-panel-background-alt even:bg-panel-background',
             selectedLink === idx && 'border-panel-text-primary',
           ])}
           key={`${link.FileID}-${link.EpisodeID}-${idx}-static`}
@@ -610,13 +610,13 @@ const LinkFilesTab = () => {
   const renderDynamicFileLinks = () =>
     reduce<ManualLink, React.ReactNode[]>(orderedLinks, (result, link, idx) => {
       const file = find(selectedRows, ['ID', link.FileID]);
-      const path = file?.Locations?.[0].RelativePath ?? '<missing file path>';
+      const path = file?.Locations?.[0]?.RelativePath ?? '<missing file path>';
       const isSameFile = idx > 0 && orderedLinks[idx - 1].FileID === link.FileID;
       result.push(
         <div
           title={path}
           className={cx([
-            'flex items-center p-4 w-full border border-panel-border rounded-lg col-start-1 cursor-pointer transition-colors leading-5',
+            'col-start-1 flex w-full cursor-pointer items-center rounded-lg border border-panel-border p-4 leading-5 transition-colors',
             idx % 2 === 0 ? 'bg-panel-background' : 'bg-panel-background-alt',
             selectedLink === idx && 'border-panel-text-primary',
           ])}
@@ -707,7 +707,7 @@ const LinkFilesTab = () => {
         <div className="mt-8 flex size-full grow gap-x-6 overflow-y-auto rounded-lg border border-panel-border bg-panel-background p-6">
           <div
             className={cx(
-              'grid gap-y-2 gap-x-6 auto-rows-min',
+              'grid auto-rows-min gap-x-6 gap-y-2',
               selectedSeriesLoaded ? 'w-full grid-cols-2' : 'w-1/2 grid-cols-1',
             )}
           >

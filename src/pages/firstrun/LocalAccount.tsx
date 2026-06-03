@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
 
 import Input from '@/components/Input/Input';
 import TransitionDiv from '@/components/TransitionDiv';
 import { useSetDefaultUserMutation } from '@/core/react-query/init/mutations';
 import { useDefaultUserQuery } from '@/core/react-query/init/queries';
 import { setSaved as setFirstRunSaved, setUser as setUserState } from '@/core/slices/firstrun';
+import { useDispatch } from '@/core/store';
 import useNavigateVoid from '@/hooks/useNavigateVoid';
 
 import Footer from './Footer';
@@ -44,7 +44,7 @@ const LocalAccount = () => {
   return (
     <>
       <title>First Run &gt; Local Account | Shoko</title>
-      <TransitionDiv className="flex max-w-[38rem] flex-col justify-center gap-y-6">
+      <TransitionDiv className="flex max-w-152 flex-col justify-center gap-y-6">
         <div className="text-xl font-semibold">Creating Your Account</div>
         <div className="text-justify">
           To use Shoko, you will need to create an account. This account will allow Shoko to manage links to all

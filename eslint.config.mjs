@@ -6,6 +6,7 @@ import { configs, plugins } from 'eslint-config-airbnb-extended';
 import pluginQuery from '@tanstack/eslint-plugin-query';
 import sortDestructureKeys from 'eslint-plugin-sort-destructure-keys';
 import reactRefresh from 'eslint-plugin-react-refresh';
+import tailwind from 'eslint-plugin-better-tailwindcss';
 import tseslint from 'typescript-eslint';
 
 export const projectRoot = path.resolve('.');
@@ -37,8 +38,6 @@ const reactConfig = [
 ];
 
 const typescriptConfig = [
-  // TypeScript ESLint Plugin
-  plugins.typescriptEslint,
   // Airbnb Base TypeScript Config
   ...configs.base.typescript,
   // Airbnb React TypeScript Config
@@ -62,8 +61,28 @@ export default [
   ...tseslintConfig,
   ...pluginQuery.configs['flat/recommended'],
   reactRefresh.configs.recommended,
+  tailwind.configs.recommended,
   {
-    files: ['**/*.{j|t}s', '**/*.{j|t}sx'],
+    settings: {
+      'better-tailwindcss': {
+        entryPoint: 'src/css/tailwind.css',
+      }
+    },
+    rules: {
+      'better-tailwindcss/enforce-consistent-line-wrapping': 'off',
+      'better-tailwindcss/no-unknown-classes': ['error', {
+        ignore: [
+          'login-image-default',
+          'metadata-link-icon',
+           'react-resizable-handle',
+           'scroll-gutter',
+           'scroll-no-gutter',
+           'AniDB'
+        ]
+      }]
+    }
+  },
+  {
     plugins: {
       'sort-destructure-keys': sortDestructureKeys,
     },
@@ -119,6 +138,10 @@ export default [
           ignorePrimitives: { boolean: true }
         }
       ],
+      'func-style': [
+        'error',
+        'expression',
+      ],
       'id-length': [
         'error',
         { min: 3, exceptions: ['cx', 'ID', 'id', '_', '__'], properties: 'never' },
@@ -154,19 +177,24 @@ export default [
       ],
       'no-param-reassign': [
         'error',
-        { props: true, ignorePropertyModificationsFor: ['sliceState', 'draftState', 'draftState2'] },
+        {
+          props: true,
+          ignorePropertyModificationsFor: ['sliceState'],
+          ignorePropertyModificationsForRegex: ['^draft']
+        },
       ],
       'no-restricted-imports': [
         'error',
         {
           'patterns': [
-            { group: ['../*'], message: 'Please use @/ instead.' },
-            { group: ['usehooks-ts'], importNames: ['useCopyToClipboard'], message: 'Please use copyToClipboard from @/core/util instead.' }
+            { group: ['../*'], message: 'Use @/ instead.' },
+            { group: ['usehooks-ts'], importNames: ['useCopyToClipboard'], message: 'Use copyToClipboard from @/core/util instead.' }
           ],
           'paths': [
-            { name: 'react-router', importNames: ['useNavigate'], message: 'Please use @/hooks/useNavigateVoid instead.' },
-            { name: 'react-toastify', importNames: ['toast'], message: 'Please use @/components/Toast instead.' },
-            { name: 'usehooks-ts', importNames: ['useEventCallback'], message: 'Please use @/hooks/useEventCallback instead.' }
+            { name: 'react-redux', importNames: ['useDispatch'], message: 'Use @/core/store/useDispatch instead.' },
+            { name: 'react-redux', importNames: ['useSelector'], message: 'Use @/core/store/useSelector instead.' },
+            { name: 'react-router', importNames: ['useNavigate'], message: 'Use @/hooks/useNavigateVoid instead.' },
+            { name: 'react-toastify', importNames: ['toast'], message: 'Use @/components/Toast instead.' },
           ]
         }
       ],

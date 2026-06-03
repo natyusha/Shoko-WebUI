@@ -13,9 +13,9 @@ type Props = {
   subtitle: string;
 };
 
-const DashboardEpisode = ({ episodeId, shokoId, thumbnail, title, subtitle }: Props) => (
+const DashboardEpisode = ({ episodeId, shokoId, subtitle, thumbnail, title }: Props) => (
   <Link
-    className="group w-[28.75rem] flex flex-col shrink-0 justify-center"
+    className="group flex w-115 shrink-0 flex-col justify-center"
     to={`/webui/collection/series/${shokoId}`}
   >
     <div
@@ -24,7 +24,7 @@ const DashboardEpisode = ({ episodeId, shokoId, thumbnail, title, subtitle }: Pr
     >
       <BackgroundImagePlaceholderDiv
         image={thumbnail}
-        className="h-[16.25rem] rounded-lg border border-panel-border drop-shadow-md"
+        className="h-65 rounded-lg border border-panel-border drop-shadow-md"
         hidePlaceholderOnHover
         overlayOnHover
         zoomOnHover

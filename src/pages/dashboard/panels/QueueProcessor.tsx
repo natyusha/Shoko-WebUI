@@ -1,8 +1,7 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
+import React, { useMemo } from 'react';
 import { mdiCloseCircleOutline, mdiPauseCircleOutline, mdiPlayCircleOutline, mdiProgressClock } from '@mdi/js';
 import { Icon } from '@mdi/react';
-import { map } from 'lodash';
+import { map, uniqBy } from 'lodash';
 
 import Button from '@/components/Input/Button';
 import ShokoPanel from '@/components/Panels/ShokoPanel';
@@ -12,13 +11,13 @@ import {
   useQueueResumeMutation,
 } from '@/core/react-query/queue/mutations';
 import { useQueueItemsQuery } from '@/core/react-query/queue/queries';
+import { useSelector } from '@/core/store';
 import { dayjs } from '@/core/util';
 
 import type { QueueItemType } from '@/core/signalr/types';
-import type { RootState } from '@/core/store';
 
 const Options = () => {
-  const queue = useSelector((state: RootState) => state.mainpage.queueStatus);
+  const queue = useSelector(state => state.mainpage.queueStatus);
 
   const { mutate: clearQueue } = useQueueClearMutation();
   const { mutate: pauseQueue } = useQueuePauseMutation();
@@ -49,12 +48,14 @@ const Options = () => {
 };
 
 const Title = () => {
-  const queue = useSelector((state: RootState) => state.mainpage.queueStatus);
+  const queue = useSelector(state => state.mainpage.queueStatus);
 
   return (
     <div className="flex items-center">
       Queue Processor |&nbsp;
       <div>
+        <span className="text-panel-text-important">{queue.CurrentlyExecuting.length}</span>
+        &nbsp;/&nbsp;
         <span className="text-panel-text-important">{queue.ThreadCount}</span>
         &nbsp;Workers
       </div>
@@ -89,16 +90,22 @@ const QueueItem = ({ item }: { item: QueueItemType }) => (
 );
 
 const QueueItems = () => { // This is a separate component so that the whole ShokoPanel doesn't re-render on queue items change
+  const currentlyExecuting = useSelector(state => state.mainpage.queueStatus.CurrentlyExecuting);
   const queueItemsQuery = useQueueItemsQuery({ pageSize: 100, showAll: true });
+  const list = useMemo(() => {
+    if (!queueItemsQuery.data?.Total) return currentlyExecuting;
+    const data = queueItemsQuery.data.List.filter(item => !item.IsRunning);
+    return uniqBy([...currentlyExecuting, ...data], 'Key');
+  }, [currentlyExecuting, queueItemsQuery.data]);
 
-  return queueItemsQuery.data && queueItemsQuery.data?.Total > 0
-    ? queueItemsQuery.data.List.map(item => <QueueItem item={item} key={item.Key} />)
+  return list.length > 0
+    ? list.map(item => <QueueItem item={item} key={item.Key} />)
     : <div className="flex grow items-center justify-center pb-14 font-semibold">Queue is empty!</div>;
 };
 
 const QueueProcessor = () => {
-  const hasFetched = useSelector((state: RootState) => state.mainpage.fetched.queueStatus);
-  const layoutEditMode = useSelector((state: RootState) => state.mainpage.layoutEditMode);
+  const hasFetched = useSelector(state => state.mainpage.fetched.queueStatus);
+  const layoutEditMode = useSelector(state => state.mainpage.layoutEditMode);
 
   return (
     <ShokoPanel

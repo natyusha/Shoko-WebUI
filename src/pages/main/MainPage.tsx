@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { useDispatch } from 'react-redux';
 import { Outlet } from 'react-router';
 import { Slide, ToastContainer } from 'react-toastify';
 import { Tooltip } from 'react-tooltip';
 import { mdiLoading } from '@mdi/js';
 import { Icon } from '@mdi/react';
 
-import ImportFolderModal from '@/components/Dialogs/ImportFolderModal';
+import ManagedFolderModal from '@/components/Dialogs/ManagedFolderModal';
 import TopNav from '@/components/Layout/TopNav';
 import Events from '@/core/events';
 import { useSettingsQuery } from '@/core/react-query/settings/queries';
+import { useDispatch } from '@/core/store';
 
 const MainPage = () => {
   const dispatch = useDispatch();
@@ -45,7 +45,7 @@ const MainPage = () => {
         position={toastPosition}
         autoClose={4000}
         transition={Slide}
-        className="mt-32 w-118!"
+        className="mt-36 w-118!"
         closeButton={false}
         icon={false}
       />
@@ -56,7 +56,7 @@ const MainPage = () => {
         className="z-10000"
       />
       <div className="flex grow flex-col overflow-x-clip">
-        <ImportFolderModal />
+        <ManagedFolderModal />
         <TopNav />
         <div className="scroll-gutter grow overflow-y-auto py-6 contain-strict" ref={scrollRef}>
           <div className="scroll-no-gutter mx-auto flex min-h-full w-full max-w-480 flex-col px-6">

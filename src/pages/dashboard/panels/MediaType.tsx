@@ -1,32 +1,30 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
+import cx from 'classnames';
 import { forEach } from 'lodash';
 
 import ShokoPanel from '@/components/Panels/ShokoPanel';
 import { useDashboardSeriesSummaryQuery } from '@/core/react-query/dashboard/queries';
-
-import type { RootState } from '@/core/store';
+import { useSelector } from '@/core/store';
 
 const names = {
   Series: 'TV Series',
 };
 
-const getColor = (type: string) => {
-  switch (type) {
-    case 'Series':
-      return 'panel-text-primary';
-    case 'Other':
-      return 'panel-text-other';
-    case 'Web':
-      return 'panel-text-danger';
-    case 'Movie':
-      return 'panel-text-important';
-    case 'OVA':
-      return 'panel-text-warning';
-    default:
-      return 'panel-text-other';
-  }
-};
+const textColorMap = {
+  Series: 'text-panel-text-primary',
+  Other: 'text-panel-text-other',
+  Web: 'text-panel-text-danger',
+  Movie: 'text-panel-text-important',
+  OVA: 'text-panel-text-warning',
+} as Record<string, string>;
+
+const bgColorMap = {
+  Series: 'bg-panel-text-primary',
+  Other: 'bg-panel-text-other',
+  Web: 'bg-panel-text-danger',
+  Movie: 'bg-panel-text-important',
+  OVA: 'bg-panel-text-warning',
+} as Record<string, string>;
 
 const Item = ({ count, countPercentage, item }: { count: number, countPercentage: number, item: string }) => (
   <div>
@@ -36,19 +34,19 @@ const Item = ({ count, countPercentage, item }: { count: number, countPercentage
         &nbsp;-&nbsp;
         {count}
       </span>
-      <span className={`text-${getColor(item)} font-semibold`}>
+      <span className={cx('font-semibold', textColorMap[item])}>
         {countPercentage.toFixed(2)}
         %
       </span>
     </div>
     <div className="flex rounded-lg bg-panel-input">
-      <div className={`bg-${getColor(item)} h-4 rounded-lg`} style={{ width: `${countPercentage}%` }} />
+      <div className={cx('h-4 rounded-lg', bgColorMap[item])} style={{ width: `${countPercentage}%` }} />
     </div>
   </div>
 );
 
 const MediaType = () => {
-  const layoutEditMode = useSelector((state: RootState) => state.mainpage.layoutEditMode);
+  const layoutEditMode = useSelector(state => state.mainpage.layoutEditMode);
   const seriesSummaryQuery = useDashboardSeriesSummaryQuery();
 
   let total = 0;

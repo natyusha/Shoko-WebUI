@@ -1,11 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { mdiFilterPlusOutline } from '@mdi/js';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router';
+import { mdiContentSaveOutline, mdiFilterPlusOutline } from '@mdi/js';
 import { keys, map, values } from 'lodash';
 
 import AddCriteriaModal from '@/components/Collection/Filter/AddCriteriaModal';
 import DefaultCriteria from '@/components/Collection/Filter/DefaultCriteria';
 import MultiValueCriteria from '@/components/Collection/Filter/MultiValueCriteria';
+import SavePresetModal from '@/components/Collection/Filter/SavePresetModal';
 import TagCriteria from '@/components/Collection/Filter/TagCriteria';
 import Button from '@/components/Input/Button';
 import IconButton from '@/components/Input/IconButton';
@@ -16,9 +17,10 @@ import {
   selectActiveCriteriaWithValues,
   setActiveFilter,
 } from '@/core/slices/collection';
+import { useDispatch, useSelector } from '@/core/store';
 import { buildSidebarFilter } from '@/core/utilities/filter';
 
-import type { RootState } from '@/core/store';
+import type { ButtonType } from '@/components/Input/Button.utils';
 import type { FilterExpression } from '@/core/types/api/filter';
 
 const CriteriaComponent = ({ criteria }: { criteria: FilterExpression }) => {
@@ -32,44 +34,78 @@ const CriteriaComponent = ({ criteria }: { criteria: FilterExpression }) => {
 };
 
 const OptionButton = (
-  { icon, onClick, tooltip }: { icon: string, onClick: React.MouseEventHandler<HTMLDivElement>, tooltip?: string },
-) => <IconButton icon={icon} buttonType="secondary" buttonSize="normal" onClick={onClick} tooltip={tooltip} />;
-const Options = ({ showModal }: { showModal: () => void }) => (
-  <OptionButton onClick={showModal} icon={mdiFilterPlusOutline} tooltip="Add Condition" />
+  { buttonType, disabled, icon, onClick, tooltip }: {
+    buttonType?: ButtonType;
+    disabled?: boolean;
+    icon: string;
+    onClick: React.MouseEventHandler<HTMLDivElement>;
+    tooltip?: string;
+  },
+) => (
+  <IconButton
+    icon={icon}
+    buttonType={buttonType ?? 'secondary'}
+    buttonSize="normal"
+    onClick={onClick}
+    tooltip={tooltip}
+    disabled={disabled}
+  />
 );
 
-const FilterSidebar = () => {
-  const [criteriaModal, setCriteriaModal] = useState(false);
-  const dispatch = useDispatch();
-  const selectedCriteria = useSelector((state: RootState) => state.collection.filterCriteria);
+type OptionsProps = {
+  showCriteriaModal: () => void;
+  showSavePresetModal: () => void;
+};
+
+const Options = ({ showCriteriaModal, showSavePresetModal }: OptionsProps) => {
+  const { filterId } = useParams();
+
   const activeCriteriaWithValues = useSelector(selectActiveCriteriaWithValues);
 
-  const applyFilter = useCallback(() => {
-    const requestData = buildSidebarFilter(values(selectedCriteria));
-    dispatch(setActiveFilter(requestData));
-  }, [dispatch, selectedCriteria]);
+  const saveDisabled = filterId !== 'live' || keys(activeCriteriaWithValues).length === 0;
+  const saveDisabledReason = filterId !== 'live' ? 'Editing presets is currently unsupported' : '';
 
-  const showCriteriaModal = (state: boolean) => () => {
-    setCriteriaModal(state);
-  };
+  return (
+    <div className="flex gap-2">
+      <OptionButton
+        onClick={showSavePresetModal}
+        icon={mdiContentSaveOutline}
+        tooltip={saveDisabled ? saveDisabledReason : 'Save as preset'}
+        disabled={saveDisabled}
+      />
+      <OptionButton onClick={showCriteriaModal} icon={mdiFilterPlusOutline} tooltip="Add condition" />
+    </div>
+  );
+};
 
-  const handleResetFilter = () => {
-    dispatch(resetFilter());
-  };
+const FilterSidebar = () => {
+  const [criteriaModal, showCriteriaModal] = useState(false);
+  const [savePresetModal, showSavePresetModal] = useState(false);
+  const dispatch = useDispatch();
+  const selectedCriteria = useSelector(state => state.collection.filterCriteria);
+  const activeCriteriaWithValues = useSelector(selectActiveCriteriaWithValues);
+
+  const isFilterValid = keys(selectedCriteria).length > 0
+    && keys(selectedCriteria).length === keys(activeCriteriaWithValues).length;
+
+  const finalFilterExpression = isFilterValid ? buildSidebarFilter(values(selectedCriteria)) : undefined;
 
   useEffect(() => {
-    const count = keys(selectedCriteria).length;
-    if (count !== keys(activeCriteriaWithValues).length) return;
-    if (count > 0) applyFilter();
+    if (isFilterValid && finalFilterExpression) dispatch(setActiveFilter(finalFilterExpression));
     else dispatch(resetActiveFilter());
-  }, [activeCriteriaWithValues, applyFilter, dispatch, selectedCriteria]);
+  }, [dispatch, finalFilterExpression, isFilterValid]);
 
   return (
     <ShokoPanel
       title="Filter"
-      className="sticky top-24 ml-6 !h-[calc(100vh-18rem)] w-full"
+      className="sticky top-24 ml-6 h-[calc(100vh-18rem)]! w-full"
       contentClassName="gap-y-6"
-      options={<Options showModal={showCriteriaModal(true)} />}
+      options={
+        <Options
+          showCriteriaModal={() => showCriteriaModal(true)}
+          showSavePresetModal={() => showSavePresetModal(true)}
+        />
+      }
     >
       {map(
         selectedCriteria,
@@ -78,11 +114,16 @@ const FilterSidebar = () => {
       <Button
         buttonType="danger"
         className="px-4 py-3"
-        onClick={handleResetFilter}
+        onClick={() => dispatch(resetFilter())}
       >
         Clear Filter
       </Button>
-      <AddCriteriaModal show={criteriaModal} onClose={showCriteriaModal(false)} />
+      <AddCriteriaModal show={criteriaModal} onClose={() => showCriteriaModal(false)} />
+      <SavePresetModal
+        show={savePresetModal}
+        onClose={() => showSavePresetModal(false)}
+        filterCondition={finalFilterExpression}
+      />
     </ShokoPanel>
   );
 };

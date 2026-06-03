@@ -14,7 +14,7 @@ import UtilitiesTable from '@/components/Utilities/UtilitiesTable';
 import { staticColumns } from '@/components/Utilities/constants';
 import { useIgnoreFileMutation } from '@/core/react-query/file/mutations';
 import { useFilesInfiniteQuery } from '@/core/react-query/file/queries';
-import { useImportFoldersQuery } from '@/core/react-query/import-folder/queries';
+import { useManagedFoldersQuery } from '@/core/react-query/managed-folder/queries';
 import { invalidateQueries } from '@/core/react-query/queryClient';
 import { FileSortCriteriaEnum, type FileType } from '@/core/types/api/file';
 import useFlattenListResult from '@/hooks/useFlattenListResult';
@@ -54,7 +54,7 @@ const Menu = (
   };
 
   return (
-    <div className="relative box-border flex h-13 grow items-center rounded-lg border border-panel-border bg-panel-background-alt px-4 py-3 ">
+    <div className="relative box-border flex h-13 grow items-center rounded-lg border border-panel-border bg-panel-background-alt px-4 py-3">
       <TransitionDiv className="absolute flex grow gap-x-4" show={selectedRows.length === 0}>
         <MenuButton
           onClick={() => {
@@ -66,12 +66,17 @@ const Menu = (
         />
       </TransitionDiv>
       <TransitionDiv className="absolute flex grow gap-x-4" show={selectedRows.length !== 0}>
-        <MenuButton onClick={restoreFiles} icon={mdiEyeOutline} name="Restore" highlight />
+        <MenuButton
+          onClick={restoreFiles}
+          icon={mdiEyeOutline}
+          name="Restore"
+          highlightType="danger"
+        />
         <MenuButton
           onClick={() => setSelectedRows([])}
           icon={mdiCloseCircleOutline}
           name="Cancel Selection"
-          highlight
+          highlightType="primary"
         />
       </TransitionDiv>
     </div>
@@ -85,10 +90,10 @@ const IgnoredFilesTab = () => {
     setSearch,
     setSortCriteria,
     sortCriteria,
-  } = useTableSearchSortCriteria(FileSortCriteriaEnum.ImportFolderName);
+  } = useTableSearchSortCriteria(FileSortCriteriaEnum.ManagedFolderName);
 
-  const importFolderQuery = useImportFoldersQuery();
-  const importFolders = useMemo(() => importFolderQuery?.data ?? [], [importFolderQuery.data]);
+  const managedFolderQuery = useManagedFoldersQuery();
+  const managedFolders = useMemo(() => managedFolderQuery?.data ?? [], [managedFolderQuery.data]);
 
   const sortOrder = useMemo(() => {
     if (!sortCriteria) return undefined;
@@ -109,18 +114,18 @@ const IgnoredFilesTab = () => {
   const columns = useMemo<UtilityHeaderType<FileType>[]>(
     () => [
       {
-        id: 'importFolder',
-        name: 'Import Folder',
-        className: 'w-40',
+        id: 'managedFolder',
+        name: 'Managed Folder',
+        className: 'w-46',
         item: file =>
           find(
-            importFolders,
-            { ID: file?.Locations[0]?.ImportFolderID ?? -1 },
+            managedFolders,
+            { ID: file?.Locations[0]?.ManagedFolderID ?? -1 },
           )?.Name ?? '<Unknown>',
       },
       ...staticColumns,
     ],
-    [importFolders],
+    [managedFolders],
   );
 
   const {
@@ -128,7 +133,7 @@ const IgnoredFilesTab = () => {
     rowSelection,
     selectedRows,
     setRowSelection,
-  } = useRowSelection<FileType>(files);
+  } = useRowSelection(files);
 
   return (
     <>
@@ -174,7 +179,7 @@ const IgnoredFilesTab = () => {
               isFetchingNextPage={filesQuery.isFetchingNextPage}
               rows={files}
               rowSelection={rowSelection}
-              setSelectedRows={setRowSelection}
+              setRowSelection={setRowSelection}
               setSortCriteria={setSortCriteria}
               sortCriteria={sortCriteria}
             />

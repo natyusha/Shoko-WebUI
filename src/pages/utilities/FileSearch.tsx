@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import { Link } from 'react-router';
 import {
   mdiChevronLeft,
@@ -17,7 +16,7 @@ import {
 } from '@mdi/js';
 import Icon from '@mdi/react';
 import cx from 'classnames';
-import { forEach, get, reverse } from 'lodash';
+import { forEach, reverse } from 'lodash';
 import prettyBytes from 'pretty-bytes';
 
 import DeleteFilesModal from '@/components/Dialogs/DeleteFilesModal';
@@ -41,6 +40,7 @@ import { useFileQuery, useFilesInfiniteQuery } from '@/core/react-query/file/que
 import { invalidateQueries } from '@/core/react-query/queryClient';
 import { useSeriesQuery } from '@/core/react-query/series/queries';
 import { addFiles } from '@/core/slices/utilities/renamer';
+import { useDispatch } from '@/core/store';
 import { FileSortCriteriaEnum } from '@/core/types/api/file';
 import { copyToClipboard } from '@/core/util';
 import getEd2kLink from '@/core/utilities/getEd2kLink';
@@ -149,12 +149,17 @@ const Menu = (
         <MenuButton onClick={rescanFiles} icon={mdiDatabaseSearchOutline} name="Rescan" />
         <MenuButton onClick={rehashFiles} icon={mdiDatabaseSyncOutline} name="Rehash" />
         <MenuButton onClick={handleRename} icon={mdiFileDocumentEditOutline} name="Rename" />
-        <MenuButton onClick={showDeleteConfirmation} icon={mdiMinusCircleOutline} name="Delete" highlight />
+        <MenuButton
+          onClick={showDeleteConfirmation}
+          icon={mdiMinusCircleOutline}
+          name="Delete"
+          highlightType="danger"
+        />
         <MenuButton
           onClick={() => setSelectedRows([])}
           icon={mdiCloseCircleOutline}
           name="Cancel Selection"
-          highlight
+          highlightType="primary"
         />
       </div>
       <DeleteFilesModal
@@ -238,19 +243,18 @@ const FileDetails = React.memo(({ fileId }: { fileId: number }) => {
   const { data: file, isPending: fileQueryIsPending } = useFileQuery(
     fileId,
     {
-      include: ['XRefs', 'MediaInfo', 'AbsolutePaths'],
-      includeDataFrom: ['AniDB'],
+      include: ['XRefs', 'MediaInfo', 'ReleaseInfo', 'AbsolutePaths'],
     },
   );
 
-  const seriesId: number = get(file, 'SeriesIDs[0].SeriesID.ID', 0);
+  const seriesId = file?.SeriesIDs?.[0]?.SeriesID.ID ?? 0;
   const { data: seriesInfo, isFetching: seriesQueryIsPending } = useSeriesQuery(
     seriesId,
     {},
     !!seriesId,
   );
 
-  const episodeId: number = get(file, 'SeriesIDs[0].EpisodeIDs[0].ID', 0);
+  const episodeId = file?.SeriesIDs?.[0]?.EpisodeIDs?.[0]?.ID ? file?.SeriesIDs?.[0]?.EpisodeIDs?.[0]?.AniDB : 0;
   const { data: episodeInfo, isFetching: episodeQueryIsPending } = useEpisodeAniDBQuery(
     episodeId,
     !!episodeId,
@@ -286,8 +290,8 @@ const FileDetails = React.memo(({ fileId }: { fileId: number }) => {
       <div className="flex flex-col gap-y-1">
         <div className="flex justify-between">
           <span className="font-semibold">File Name</span>
-          {file.AniDB?.ID && (
-            <a href={`https://anidb.net/file/${file.AniDB.ID}`} target="_blank" rel="noopener noreferrer">
+          {file.Release?.ReleaseURI?.startsWith('https://anidb.net/file/') && (
+            <a href={file.Release.ReleaseURI} target="_blank" rel="noopener noreferrer">
               <div className="flex items-center gap-x-2 font-semibold text-panel-text-primary">
                 <div className="metadata-link-icon AniDB" />
                 AniDB File
@@ -300,28 +304,29 @@ const FileDetails = React.memo(({ fileId }: { fileId: number }) => {
       </div>
 
       {seriesInfo && (
-        <div className="flex flex-col gap-y-1">
-          <div className="flex justify-between">
-            <span className="font-semibold">Series Name</span>
-            <Link to={`/webui/collection/series/${seriesId}`}>
-              <div className="flex items-center gap-x-2 font-semibold text-panel-text-primary">
-                <ShokoIcon className="size-6" />
-                Shoko
-                <Icon className="text-panel-icon-action" path={mdiOpenInNew} size={1} />
-              </div>
-            </Link>
+        <>
+          <div className="flex flex-col gap-y-1">
+            <div className="flex justify-between">
+              <span className="font-semibold">Series Name</span>
+              <Link to={`/webui/collection/series/${seriesId}`}>
+                <div className="flex items-center gap-x-2 font-semibold text-panel-text-primary">
+                  <ShokoIcon className="size-6" />
+                  Shoko
+                  <Icon className="text-panel-icon-action" path={mdiOpenInNew} size={1} />
+                </div>
+              </Link>
+            </div>
+            <span className="break-all">{seriesInfo.Name}</span>
           </div>
-          <span className="break-all">{seriesInfo.Name}</span>
-        </div>
-      )}
-
-      {episodeInfo && (
-        <div className="flex flex-col gap-y-1">
-          <div className="flex justify-between capitalize">
-            <span className="font-semibold">Episode Name</span>
+          <div className="flex flex-col gap-y-1">
+            <div className="flex justify-between capitalize">
+              <span className="font-semibold">Episode Name</span>
+            </div>
+            <span className={cx('break-all', !episodeInfo && 'text-panel-text-danger')}>
+              {episodeInfo?.Title ?? '<missing data>'}
+            </span>
           </div>
-          <span className="break-all">{episodeInfo.Title}</span>
-        </div>
+        </>
       )}
 
       <MediaInfoDetails file={file} />
@@ -339,7 +344,7 @@ const FileSearch = () => {
   } = useTableSearchSortCriteria(-FileSortCriteriaEnum.CreatedAt);
 
   const filesQuery = useFilesInfiniteQuery({
-    include: ['XRefs'],
+    include: ['XRefs', 'ImportLimbo'],
     sortOrder: sortCriteria ? [sortCriteria] : undefined,
     pageSize: 50,
   }, debouncedSearch);
@@ -350,7 +355,7 @@ const FileSearch = () => {
     rowSelection,
     selectedRows,
     setRowSelection,
-  } = useRowSelection<FileType>(files);
+  } = useRowSelection(files);
 
   const [viewIndex, setViewIndex] = useState(0);
 
@@ -413,7 +418,7 @@ const FileSearch = () => {
                 isFetchingNextPage={filesQuery.isFetchingNextPage}
                 rows={files}
                 rowSelection={rowSelection}
-                setSelectedRows={setRowSelection}
+                setRowSelection={setRowSelection}
                 setSortCriteria={setSortCriteria}
                 sortCriteria={sortCriteria}
               />
@@ -421,7 +426,7 @@ const FileSearch = () => {
           </div>
           <div className="flex w-full flex-col lg:max-w-[25%]">
             {selectedRows?.length > 0 && (
-              <div className="flex size-full flex-col overflow-y-auto overflow-x-hidden rounded-lg border border-panel-border bg-panel-background p-6">
+              <div className="flex size-full flex-col overflow-x-hidden overflow-y-auto rounded-lg border border-panel-border bg-panel-background p-6">
                 <div className="flex w-full grow flex-col gap-y-6 overflow-y-auto pr-4">
                   <FilesSummary title="Selected Summary" items={selectedRows} />
                   <div className="flex w-full text-xl font-semibold">

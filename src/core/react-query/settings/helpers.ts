@@ -1,9 +1,7 @@
 import { merge } from 'lodash';
-import semver from 'semver';
 
 import { webuiSettingsPatches } from '@/core/patches';
 import { LanguageSource } from '@/core/types/api/settings';
-import { uiVersion } from '@/core/util';
 
 import type { SupportedLanguagesResponseType } from '@/core/react-query/settings/types';
 import type { SettingsServerType, SettingsType, WebUISettingsType } from '@/core/types/api/settings';
@@ -67,7 +65,7 @@ const initialLayout = {
         static: false,
       },
       {
-        i: 'importFolders',
+        i: 'managedFolders',
         x: 6,
         y: 37,
         w: 3,
@@ -190,7 +188,7 @@ const initialLayout = {
         static: false,
       },
       {
-        i: 'importFolders',
+        i: 'managedFolders',
         x: 5,
         y: 51,
         w: 5,
@@ -265,8 +263,10 @@ export const initialSettings: SettingsType = {
     settingsRevision: 0,
     theme: 'theme-shoko-gray',
     toastPosition: 'bottom-right',
-    updateChannel: semver.prerelease(uiVersion()) ? 'Dev' : 'Stable',
+    updateChannel: 'Auto',
+    serverUpdateChannel: 'Auto',
     layout: initialLayout,
+    releaseInfoProviders: [],
     collection: {
       view: 'poster',
       poster: {
@@ -298,7 +298,7 @@ export const initialSettings: SettingsType = {
       hideRecentlyImported: false,
       hideCollectionStats: false,
       hideMediaType: false,
-      hideImportFolders: false,
+      hideManagedFolders: false,
       hideShokoNews: false,
       hideContinueWatching: false,
       hideNextUp: false,
@@ -337,7 +337,6 @@ export const initialSettings: SettingsType = {
     DownloadCharacters: false,
     DownloadCreators: false,
     DownloadRelatedAnime: false,
-    DownloadReleaseGroups: false,
     MaxRelationDepth: 0,
     MyList_AddFiles: false,
     MyList_DeleteType: 0,
@@ -383,23 +382,17 @@ export const initialSettings: SettingsType = {
     DescriptionLanguageOrder: ['en'],
     DescriptionSourceOrder: [LanguageSource.TMDB, LanguageSource.AniDB],
   },
-  TraktTv: {
-    Enabled: false,
-    TokenExpirationDate: '',
-    SyncFrequency: 1,
-    AuthToken: '',
-    RefreshToken: '',
-  },
   Plex: {
     Server: '',
     Libraries: [],
     Token: '',
   },
-  LogRotator: {
-    Enabled: false,
-    Zip: false,
-    Delete: false,
-    Delete_Days: '0',
+  Logging: {
+    RotationEnabled: false,
+    RotationCompress: false,
+    RotationDeleteEnabled: false,
+    RotationDeleteDays: 90,
+    TraceLog: false,
   },
   AutoGroupSeries: false,
   AutoGroupSeriesUseScoreAlgorithm: false,
@@ -411,7 +404,6 @@ export const initialSettings: SettingsType = {
     VideoExtensions: [],
   },
   LoadImageMetadata: false,
-  TraceLog: false,
   Plugins: {
     EnabledPlugins: {},
     Priority: [],

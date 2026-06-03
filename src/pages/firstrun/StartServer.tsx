@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useOutletContext } from 'react-router';
 
 import Button from '@/components/Input/Button';
@@ -8,11 +7,10 @@ import { useLoginMutation } from '@/core/react-query/auth/mutations';
 import { useStartServerMutation } from '@/core/react-query/init/mutations';
 import { useServerStatusQuery } from '@/core/react-query/init/queries';
 import { setSaved as setFirstRunSaved } from '@/core/slices/firstrun';
+import { useDispatch, useSelector } from '@/core/store';
 import useNavigateVoid from '@/hooks/useNavigateVoid';
 
 import Footer from './Footer';
-
-import type { RootState } from '@/core/store';
 
 type OutletContextType = {
   setIsPersistent: (value: boolean) => void;
@@ -29,7 +27,7 @@ const StartServer = () => {
   const { mutate: login } = useLoginMutation();
   const serverStatusQuery = useServerStatusQuery(pollingInterval);
 
-  const user = useSelector((state: RootState) => state.firstrun.user);
+  const user = useSelector(state => state.firstrun.user);
 
   const handleNext = () => {
     setPollingInterval(0);
@@ -42,7 +40,7 @@ const StartServer = () => {
         rememberUser: false,
       },
       {
-        onSuccess: () => navigate('../import-folders'),
+        onSuccess: () => navigate('../managed-folders'),
       },
     );
   };
@@ -62,11 +60,11 @@ const StartServer = () => {
   return (
     <>
       <title>First Run &gt; Start Server | Shoko</title>
-      <TransitionDiv className="flex max-w-[38rem] flex-col justify-center gap-y-6">
+      <TransitionDiv className="flex max-w-152 flex-col justify-center gap-y-6">
         <div className="text-xl font-semibold">Start Server</div>
         <div className="text-justify">
           On this page you can try and start the server, startup progress will be reported below. After the startup and
-          database creation process is complete you will be able to setup import folders.
+          database creation process is complete you will be able to setup managed folders.
         </div>
         <div className="flex flex-col">
           <div className="flex gap-x-2">

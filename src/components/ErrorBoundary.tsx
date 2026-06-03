@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import { useRouteError } from 'react-router';
 
 import ShokoMascot from '@/../images/shoko_mascot.png';
@@ -7,6 +6,7 @@ import Button from '@/components/Input/Button';
 import Events from '@/core/events';
 import { useVersionQuery } from '@/core/react-query/init/queries';
 import { useUpdateWebuiMutation } from '@/core/react-query/webui/mutations';
+import { useDispatch } from '@/core/store';
 import useNavigateVoid from '@/hooks/useNavigateVoid';
 
 type RouteError = {
@@ -47,14 +47,27 @@ const ErrorBoundary = ({ error, resetError }: { error?: Error, resetError?: () =
     <>
       <title>Error! | Shoko</title>
       <div className="relative flex grow items-center justify-center overflow-hidden p-6">
-        <div className="z-20 flex h-full max-w-[56.4375rem] flex-col items-center justify-center gap-y-4 overflow-y-auto md:gap-y-6">
-          <div className="text-4xl text-panel-text md:text-7xl">Congratulations!</div>
-          <div className="text-2xl text-panel-text md:text-5xl">You Broke The Web UI!</div>
-          <pre className="flex max-h-[25rem] max-w-full flex-col overflow-y-auto whitespace-pre-wrap rounded-lg border border-panel-border bg-panel-input p-4 md:p-6">
-            The information below is absolutely (maybe) useless!
-            <br />
-            <br />
-            {error ? `${error.message}\n${error.stack}` : routeError.data}
+        <div className="z-20 flex h-full max-w-225.75 flex-col items-center justify-center gap-y-4 overflow-y-auto md:gap-y-6">
+          <div className="text-4xl text-panel-text md:text-5xl">Congratulations!</div>
+          <div className="text-2xl text-panel-text md:text-2xl">You Broke The Web UI!</div>
+          <pre className="flex max-h-100 max-w-full flex-col overflow-y-auto rounded-lg border border-panel-border bg-panel-input p-4 whitespace-pre-wrap md:p-6">
+            {routeError?.status === 404
+              ? (
+                <>
+                  {routeError.error.message}
+                  <br />
+                  <br />
+                  Check the URL and try again.
+                </>
+              )
+              : (
+                <>
+                  The information below is absolutely (maybe) useless!
+                  <br />
+                  <br />
+                  {error ? `${error.message}\n${error.stack}` : routeError.data}
+                </>
+              )}
           </pre>
           {routeError?.status === 404
             ? (
@@ -126,7 +139,7 @@ const ErrorBoundary = ({ error, resetError }: { error?: Error, resetError?: () =
         <img
           src={ShokoMascot}
           alt="mascot"
-          className="absolute -bottom-40 -right-36 z-10 opacity-30"
+          className="absolute -right-36 -bottom-40 z-10 opacity-30"
         />
       </div>
     </>

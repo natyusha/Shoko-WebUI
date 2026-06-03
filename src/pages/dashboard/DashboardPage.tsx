@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useEffectEvent, useState } from 'react';
 import { ResponsiveGridLayout, useContainerWidth } from 'react-grid-layout';
-import { useDispatch, useSelector } from 'react-redux';
 import { useLocation } from 'react-router';
 import { mdiMenuDown } from '@mdi/js';
 import { Icon } from '@mdi/react';
@@ -12,11 +11,12 @@ import { initialSettings } from '@/core/react-query/settings/helpers';
 import { usePatchSettingsMutation } from '@/core/react-query/settings/mutations';
 import { useSettingsQuery } from '@/core/react-query/settings/queries';
 import { setLayoutEditMode } from '@/core/slices/mainpage';
+import { useDispatch, useSelector } from '@/core/store';
 import WelcomeModal from '@/pages/dashboard/components/WelcomeModal';
 
 import CollectionStats from './panels/CollectionStats';
 import ContinueWatching from './panels/ContinueWatching';
-import ImportFolders from './panels/ImportFolders';
+import ManagedFolders from './panels/ManagedFolders';
 import MediaType from './panels/MediaType';
 import NextUp from './panels/NextUp';
 import QueueProcessor from './panels/QueueProcessor';
@@ -26,10 +26,8 @@ import ShokoNews from './panels/ShokoNews';
 import UnrecognizedFiles from './panels/UnrecognizedFiles';
 import UpcomingAnime from './panels/UpcomingAnime';
 
-import type { RootState } from '@/core/store';
-
 const renderResizeHandle = () => (
-  <div className="react-resizable-handle bottom-0 right-0 cursor-nwse-resize">
+  <div className="react-resizable-handle right-0 bottom-0 cursor-nwse-resize">
     <Icon path={mdiMenuDown} size={1.5} className="text-panel-text-primary" rotate={-45} />
   </div>
 );
@@ -55,7 +53,7 @@ const Toast = React.memo((
 const DashboardPage = () => {
   const dispatch = useDispatch();
 
-  const layoutEditMode = useSelector((state: RootState) => state.mainpage.layoutEditMode);
+  const layoutEditMode = useSelector(state => state.mainpage.layoutEditMode);
 
   const settingsQuery = useSettingsQuery();
   const settings = settingsQuery.data;
@@ -66,7 +64,7 @@ const DashboardPage = () => {
     combineContinueWatching,
     hideCollectionStats,
     hideContinueWatching,
-    hideImportFolders,
+    hideManagedFolders,
     hideMediaType,
     hideNextUp,
     hideQueueProcessor,
@@ -102,7 +100,7 @@ const DashboardPage = () => {
           : currentLayout,
       );
     });
-    patchSettings({ newSettings }, {
+    patchSettings(newSettings, {
       onSuccess: () => {
         dispatch(setLayoutEditMode(false));
         toast.dismiss('layoutEditMode');
@@ -193,9 +191,9 @@ const DashboardPage = () => {
               <MediaType />
             </div>
           )}
-          {!hideImportFolders && (
-            <div key="importFolders">
-              <ImportFolders />
+          {!hideManagedFolders && (
+            <div key="managedFolders">
+              <ManagedFolders />
             </div>
           )}
           {!hideShokoNews && (

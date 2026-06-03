@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import { produce } from 'immer';
 
 import Button from '@/components/Input/Button';
@@ -7,6 +6,7 @@ import Checkbox from '@/components/Input/Checkbox';
 import ModalPanel from '@/components/Panels/ModalPanel';
 import { usePatchSettingsMutation } from '@/core/react-query/settings/mutations';
 import { useSettingsQuery } from '@/core/react-query/settings/queries';
+import { useDispatch } from '@/core/store';
 
 type Props = {
   show: boolean;
@@ -41,7 +41,7 @@ const DisplaySettingsModal = ({ onClose, show }: Props) => {
   };
 
   const handleSave = () => {
-    patchSettings({ newSettings }, {
+    patchSettings(newSettings, {
       onSuccess: () => onClose(),
     });
   };

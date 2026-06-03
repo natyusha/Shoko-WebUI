@@ -23,7 +23,6 @@ const AniDBTab = ({ setStatus }: Props) => {
     DownloadCharacters,
     DownloadCreators,
     DownloadRelatedAnime,
-    DownloadReleaseGroups,
     File_UpdateFrequency,
     MaxRelationDepth,
     MyList_AddFiles,
@@ -67,13 +66,6 @@ const AniDBTab = ({ setStatus }: Props) => {
           label="Creator Images"
           id="DownloadCreators"
           isChecked={DownloadCreators}
-          onChange={handleInputChange}
-          justify
-        />
-        <Checkbox
-          label="Release Groups"
-          id="DownloadReleaseGroups"
-          isChecked={DownloadReleaseGroups}
           onChange={handleInputChange}
           justify
         />
@@ -168,7 +160,7 @@ const AniDBTab = ({ setStatus }: Props) => {
           value={Calendar_UpdateFrequency}
           onChange={handleInputChange}
         >
-          <UpdateFrequencyValues />
+          <UpdateFrequencyValues min24Hours />
         </SelectSmall>
         <SelectSmall
           label="Anime Information"
@@ -176,7 +168,7 @@ const AniDBTab = ({ setStatus }: Props) => {
           value={Anime_UpdateFrequency}
           onChange={handleInputChange}
         >
-          <UpdateFrequencyValues />
+          <UpdateFrequencyValues min24Hours />
         </SelectSmall>
         <SelectSmall
           label="Files With Missing Info"

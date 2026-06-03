@@ -3,7 +3,7 @@ import { useOutletContext, useParams } from 'react-router';
 import { mdiStarCircleOutline } from '@mdi/js';
 import { Icon } from '@mdi/react';
 import cx from 'classnames';
-import { capitalize, split } from 'lodash';
+import { capitalize } from 'lodash';
 
 import BackgroundImagePlaceholderDiv from '@/components/BackgroundImagePlaceholderDiv';
 import Button from '@/components/Input/Button';
@@ -51,10 +51,6 @@ const SeriesImages = () => {
   const images = useSeriesImagesQuery(series.IDs.ID).data;
   const { mutate: changeImage } = useChangeSeriesImageMutation(series.IDs.ID);
 
-  const splitPath = split(selectedImage?.RelativeFilepath ?? '-', '/');
-  const filename = splitPath[0] === '-' ? '-' : splitPath.pop();
-  const filepath = splitPath[0] ? splitPath.join('/') : '-';
-
   const handleSelectionChange = (item: ImageType) => {
     setSelectedImage(old => ((old === item) ? null : item));
   };
@@ -83,8 +79,6 @@ const SeriesImages = () => {
             transparent
             sticky
           >
-            <InfoLine title="Filename" value={filename ?? 'N/A'} />
-            <InfoLine title="Location" value={filepath} />
             <InfoLine title="Source" value={selectedImage?.Source ?? '-'} />
             <InfoLine
               title="Size"
@@ -103,7 +97,7 @@ const SeriesImages = () => {
           </ShokoPanel>
         </div>
         <div className="flex grow flex-col gap-y-6">
-          <div className="flex h-[6.125rem] items-center justify-between rounded-lg border border-panel-border bg-panel-background-transparent p-6">
+          <div className="flex h-24.5 items-center justify-between rounded-lg border border-panel-border bg-panel-background-transparent p-6">
             <div className="text-xl font-semibold">
               Images |&nbsp;
               <span className="text-panel-text-important">{images?.[tabType]?.length ?? '-'}</span>
@@ -129,9 +123,9 @@ const SeriesImages = () => {
                   image={item}
                   contain={tabType === 'Logos'}
                   className={cx(
-                    'rounded-lg drop-shadow-md transition-transform outline grow',
+                    'grow rounded-lg outline drop-shadow-md transition-transform',
                     item === selectedImage
-                      ? 'outline-panel-text-important outline-4'
+                      ? 'outline-4 outline-panel-text-important'
                       : 'outline-2 outline-panel-border',
                     sizeMap[tabType].image,
                   )}

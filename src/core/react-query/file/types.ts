@@ -5,7 +5,8 @@ export type DeleteFilesRequestType = {
 
 export type DeleteFileRequestType = {
   fileId: number;
-  removeFolder: boolean;
+  removeFiles?: boolean;
+  removeFolder?: boolean;
 };
 
 export type DeleteFileLocationsRequestType = {

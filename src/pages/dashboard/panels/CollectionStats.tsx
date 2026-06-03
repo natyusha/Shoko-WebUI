@@ -1,15 +1,13 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router';
 import prettyBytes from 'pretty-bytes';
 
 import ShokoPanel from '@/components/Panels/ShokoPanel';
 import { useDashbordStatsQuery } from '@/core/react-query/dashboard/queries';
 import { resetFilter } from '@/core/slices/collection';
+import { useDispatch, useSelector } from '@/core/store';
 import { addFilterCriteriaToStore } from '@/core/utilities/filter';
 import useNavigateVoid from '@/hooks/useNavigateVoid';
-
-import type { RootState } from '@/core/store';
 
 const Item = (
   { filter, link, title, value = 0 }: { title: string, value?: string | number, link?: string, filter?: string },
@@ -46,7 +44,7 @@ const Item = (
 };
 
 const CollectionStats = () => {
-  const layoutEditMode = useSelector((state: RootState) => state.mainpage.layoutEditMode);
+  const layoutEditMode = useSelector(state => state.mainpage.layoutEditMode);
 
   const statsQuery = useDashbordStatsQuery();
 
@@ -70,7 +68,7 @@ const CollectionStats = () => {
     />,
     <Item
       key="unrecognized-files"
-      title="Unknown Files"
+      title="Unrecognized Files"
       value={statsQuery.data?.UnrecognizedFiles}
       link="/webui/utilities/unrecognized"
     />,
@@ -78,13 +76,13 @@ const CollectionStats = () => {
       key="multiple-files"
       title="Duplicate Episodes"
       value={statsQuery.data?.EpisodesWithMultipleFiles}
-      link="/webui/utilities/release-management/multiples"
+      link="/webui/utilities/release-management/MultipleReleases"
     />,
     <Item
       key="duplicate-files"
       title="Duplicate Hashes"
       value={statsQuery.data?.FilesWithDuplicateLocations}
-      link="/webui/utilities/release-management/duplicates"
+      link="/webui/utilities/release-management/DuplicateFiles"
     />,
   ];
 
@@ -99,13 +97,13 @@ const CollectionStats = () => {
       key="missing-episodes-collecting"
       title="Missing Episodes (Collecting)"
       value={statsQuery.data?.MissingEpisodesCollecting}
-      link="/webui/utilities/release-management/missing-episodes?onlyCollecting=true"
+      link="/webui/utilities/release-management/MissingEpisodes?onlyCollecting=true"
     />,
     <Item
       key="missing-episodes"
       title="Missing Episodes (Total)"
       value={statsQuery.data?.MissingEpisodes}
-      link="/webui/utilities/release-management/missing-episodes"
+      link="/webui/utilities/release-management/MissingEpisodes"
     />,
   ];
 

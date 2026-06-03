@@ -44,8 +44,10 @@ export const useDeleteTmdbLinkMutation = (seriesId: number, linkType: 'Movie' | 
 
 export const useSetPreferredTmdbShowOrderingMutation = (showId: number) =>
   useMutation({
-    mutationKey: ['series', 'tmdb', 'show', showId, 'ordering', 'set-preferred'],
     mutationFn: (alternateOrderingId: string) =>
-      axios.post(`/TMDB/Show/${showId}/Ordering/SetPreferred`, { alternateOrderingId }),
-    onSuccess: () => invalidateQueries(['series', 'tmdb', 'show', showId, 'ordering']),
+      axios.post(`Tmdb/Show/${showId}/Ordering/SetPreferred`, { AlternateOrderingID: alternateOrderingId }),
+    onSuccess: () => {
+      invalidateQueries(['series', 'tmdb', 'show']);
+      invalidateQueries(['series', 'tmdb', 'episode']);
+    },
   });

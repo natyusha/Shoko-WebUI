@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import type { PlacesType } from 'react-tooltip';
 import { Icon } from '@mdi/react';
 import cx from 'classnames';
@@ -25,7 +25,6 @@ type Props = {
   className?: string;
   inputClassName?: string;
   autoFocus?: boolean;
-  autoFocusHook?: boolean;
   disabled?: boolean;
   center?: boolean;
   endIcons?: EndIcon[];
@@ -45,7 +44,6 @@ type TooltipAttributes = {
 const Input = React.memo((props: Props) => {
   const {
     autoFocus = false,
-    autoFocusHook = false,
     center,
     className,
     disabled,
@@ -67,15 +65,8 @@ const Input = React.memo((props: Props) => {
   } = props;
 
   const bodyVisible = useBodyVisibleContext();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const inputRefHook = useAutoFocusRef(autoFocusHook, bodyVisible);
+  const inputRef = useAutoFocusRef(autoFocus && !disabled && bodyVisible);
   const [isShow, setIsShow] = React.useState(false);
-
-  useLayoutEffect(() => {
-    if (autoFocus && bodyVisible && inputRef?.current) {
-      inputRef.current.focus();
-    }
-  }, [autoFocus, bodyVisible, inputRef]);
 
   useEffect(() => {
     if (isOverlay) return;
@@ -104,7 +95,7 @@ const Input = React.memo((props: Props) => {
     <div
       className={cx([
         className ?? '',
-        isOverlay && 'flex-row gap-x-2 flex',
+        isOverlay && 'flex flex-row gap-x-2',
       ])}
     >
       <label
@@ -113,9 +104,9 @@ const Input = React.memo((props: Props) => {
       >
         {label && (
           <div
-            className={cx('font-semibold text-base', {
+            className={cx('text-base font-semibold', {
               'mb-2': !inline,
-              'flex items-center mr-3 whitespace-nowrap': inline,
+              'mr-3 flex items-center whitespace-nowrap': inline,
             })}
           >
             {label}
@@ -123,16 +114,16 @@ const Input = React.memo((props: Props) => {
         )}
         <div className="relative">
           {startIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2">
+            <div className="absolute top-1/2 left-3 -translate-y-1/2">
               <Icon path={startIcon} size={1} />
             </div>
           )}
           <input
             className={cx([
               inputClassName ?? '',
-              'appearance-none bg-panel-input w-full focus:shadow-none focus:outline-hidden px-4 py-3 rounded-lg transition ease-in-out border border-panel-border focus:ring-2 focus:ring-panel-icon-action focus:ring-inset',
+              'w-full appearance-none rounded-lg border border-panel-border bg-panel-input px-4 py-3 transition ease-in-out focus:shadow-none focus:ring-2 focus:ring-panel-icon-action focus:outline-hidden focus:ring-inset',
               center && 'text-center',
-              startIcon && '!pl-11',
+              startIcon && 'pl-11!',
             ])}
             id={id}
             type={type}
@@ -142,10 +133,10 @@ const Input = React.memo((props: Props) => {
             onKeyUp={onKeyUp}
             onKeyDown={onKeyDown}
             disabled={disabled}
-            ref={autoFocusHook ? inputRefHook : inputRef}
+            ref={inputRef}
           />
           {endIcons?.length && (
-            <div className="absolute right-3 top-1/2 flex -translate-y-1/2 flex-row gap-x-2">
+            <div className="absolute top-1/2 right-3 flex -translate-y-1/2 flex-row gap-x-2">
               {endIcons.map((icon) => {
                 let tooltipAttributes: TooltipAttributes | null = null;
                 if (icon.tooltip) {

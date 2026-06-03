@@ -1,5 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { mdiInformationOutline, mdiLoading, mdiMagnify, mdiOpenInNew } from '@mdi/js';
 import { Icon } from '@mdi/react';
 import { countBy, some, toNumber } from 'lodash';
@@ -9,12 +8,13 @@ import Button from '@/components/Input/Button';
 import Input from '@/components/Input/Input';
 import ModalPanel from '@/components/Panels/ModalPanel';
 import toast from '@/components/Toast';
+import AniDbRulesModal from '@/components/Utilities/Unrecognized/AniDbRulesModal';
+import { ANIDB_RULES_SNOOZE_KEY, anidbPrompts } from '@/components/Utilities/Unrecognized/AniDbRulesModal.constants';
 import { useRescanFileMutation } from '@/core/react-query/file/mutations';
 import { useSeriesAniDBSearchQuery } from '@/core/react-query/series/queries';
-import { copyToClipboard } from '@/core/util';
+import { useSelector } from '@/core/store';
+import { copyToClipboard, dayjs } from '@/core/util';
 import { detectShow, findMostCommonShowName } from '@/core/utilities/auto-match-logic';
-
-import type { RootState } from '@/core/store';
 
 type Props = {
   show: boolean;
@@ -46,7 +46,7 @@ const Title = ({ count, step, stepCount }: { count: number, step: number, stepCo
 );
 
 const StepDescription = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex justify-start gap-x-2 ">
+  <div className="flex justify-start gap-x-2">
     <Icon className="shrink-0" path={mdiInformationOutline} size={1} />
     <div className="flex">
       {children}
@@ -60,14 +60,18 @@ const AvDumpSeriesSelectModal = ({ fileIds, links, onClose, show }: Props) => {
   const [searchText, setSearchText] = useState('');
   const [activeStep, setActiveStep] = useState(1);
   const [copyFailed, setCopyFailed] = useState(false);
+  const [selectedMassAddUrl, setSelectedMassAddUrl] = useState('');
+  const [showAniDbRulesModal, setShowAniDbRulesModal] = useState(false);
+  const [promptSeed, setPromptSeed] = useState(0);
 
   const [debouncedSearch] = useDebounceValue(searchText, 200);
-  const searchQuery = useSeriesAniDBSearchQuery(debouncedSearch, !!debouncedSearch);
+  const searchQuery = useSeriesAniDBSearchQuery(debouncedSearch, show && !!debouncedSearch);
 
-  const avdumpList = useSelector((state: RootState) => state.utilities.avdump);
+  const avdumpList = useSelector(state => state.utilities.avdump);
   const dumpInProgress = some(avdumpList.sessions, session => session.status === 'Running');
   const ed2kLinks = links.join('\n');
   const commonSeries = findMostCommonShowName(links.map(link => detectShow(link.split('|')[2])));
+  const rulesPrompt = useMemo(() => anidbPrompts[promptSeed % anidbPrompts.length], [promptSeed]);
 
   useEffect(() => {
     setSearchText(commonSeries);
@@ -106,12 +110,40 @@ const AvDumpSeriesSelectModal = ({ fileIds, links, onClose, show }: Props) => {
       .catch(console.error);
   };
 
+  const openAniDbPage = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setClickedLink(true);
+  };
+
+  const hasRulesSnooze = () => {
+    const snoozeUntil = localStorage.getItem(ANIDB_RULES_SNOOZE_KEY);
+    return snoozeUntil != null && dayjs(snoozeUntil).isAfter(dayjs());
+  };
+
+  const handleMassAddClick = (url: string) => {
+    if (hasRulesSnooze()) {
+      openAniDbPage(url);
+      return;
+    }
+
+    setPromptSeed(currentSeed => currentSeed + 1);
+    setSelectedMassAddUrl(url);
+    setShowAniDbRulesModal(true);
+  };
+
+  const handleRulesProceed = () => {
+    openAniDbPage(selectedMassAddUrl);
+    setShowAniDbRulesModal(false);
+  };
+
   useLayoutEffect(() => () => {
     if (show) return;
     setSearchText('');
     setClickedLink(false);
     setCopyFailed(false);
     setActiveStep(1);
+    setSelectedMassAddUrl('');
+    setShowAniDbRulesModal(false);
   }, [show]);
 
   return (
@@ -135,7 +167,7 @@ const AvDumpSeriesSelectModal = ({ fileIds, links, onClose, show }: Props) => {
                 )}
             </StepDescription>
             <div className="flex grow rounded-lg border border-panel-border bg-panel-input p-4">
-              <div className="flex h-[14.5rem] flex-col gap-y-1 overflow-y-auto break-all rounded-lg bg-panel-input pr-4">
+              <div className="flex h-58 flex-col gap-y-1 overflow-y-auto rounded-lg bg-panel-input pr-4 break-all">
                 {links.length
                   ? links.map(link => <div key={`link-${link.split('|')[4]}`}>{link}</div>)
                   : <div>No files selected.</div>}
@@ -187,7 +219,7 @@ const AvDumpSeriesSelectModal = ({ fileIds, links, onClose, show }: Props) => {
                 startIcon={mdiMagnify}
               />
               <div className="w-full rounded-lg border border-panel-border bg-panel-input p-4 capitalize">
-                <div className="flex h-[9.5rem] flex-col gap-y-1 overflow-x-clip overflow-y-scroll rounded-lg bg-panel-input pr-2 ">
+                <div className="flex h-38 flex-col gap-y-1 overflow-x-clip overflow-y-scroll rounded-lg bg-panel-input pr-2">
                   {searchQuery.isError || searchQuery.isFetching
                     ? (
                       <div className="flex h-full items-center justify-center">
@@ -196,17 +228,15 @@ const AvDumpSeriesSelectModal = ({ fileIds, links, onClose, show }: Props) => {
                     )
                     : (searchQuery.data ?? []).map(result => (
                       <div key={result.ID} className="flex justify-between">
-                        <a
-                          href={`https://anidb.net/anime/${result.ID}/release/add`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => setClickedLink(true)}
+                        <button
+                          type="button"
+                          onClick={() => handleMassAddClick(`https://anidb.net/anime/${result.ID}/release/add`)}
                           data-tooltip-id="tooltip"
-                          className="transition-colors hover:text-panel-text-primary"
+                          className="line-clamp-1 text-left transition-colors hover:text-panel-text-primary"
                           data-tooltip-content="Mass Add"
                         >
-                          <div className="line-clamp-1">{result.Title}</div>
-                        </a>
+                          {result.Title}
+                        </button>
                         <a
                           href={`https://anidb.net/anime/${result.ID}`}
                           aria-label="Check Series"
@@ -243,6 +273,17 @@ const AvDumpSeriesSelectModal = ({ fileIds, links, onClose, show }: Props) => {
           </>
         )}
       </div>
+      <AniDbRulesModal
+        challenge={rulesPrompt}
+        onClose={() => setShowAniDbRulesModal(false)}
+        onProceed={handleRulesProceed}
+        show={showAniDbRulesModal}
+        stepDescription={
+          <StepDescription>
+            Review these AniDB file submission rules before opening the mass-add page.
+          </StepDescription>
+        }
+      />
     </ModalPanel>
   );
 };

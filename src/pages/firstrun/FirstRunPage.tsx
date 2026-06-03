@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Outlet, useLocation } from 'react-router';
 import { mdiCheckboxBlankCircleOutline, mdiCheckboxMarkedCircleOutline, mdiCircleHalfFull, mdiLoading } from '@mdi/js';
 import { Icon } from '@mdi/react';
@@ -10,13 +9,12 @@ import ShokoIcon from '@/components/ShokoIcon';
 import { useServerStatusQuery, useVersionQuery } from '@/core/react-query/init/queries';
 import { usePatchSettingsMutation } from '@/core/react-query/settings/mutations';
 import { useSettingsQuery } from '@/core/react-query/settings/queries';
+import { useSelector } from '@/core/store';
 import useNavigateVoid from '@/hooks/useNavigateVoid';
-
-import type { RootState } from '@/core/store';
 
 const MenuItem = ({ id, text }: { text: string, id: string }) => {
   const { pathname } = useLocation();
-  const saved = useSelector((state: RootState) => state.firstrun.saved);
+  const saved = useSelector(state => state.firstrun.saved);
 
   const path = useMemo(() => {
     if (pathname === `/webui/firstrun/${id}`) return mdiCircleHalfFull;
@@ -77,7 +75,7 @@ const FirstRunPage = () => {
   };
 
   const saveSettings = async () => {
-    await patchSettings({ newSettings, skipValidation: true });
+    await patchSettings(newSettings);
   };
 
   const parsedVersion = useMemo(() => {
@@ -95,9 +93,9 @@ const FirstRunPage = () => {
   }, [versionQuery.data, versionQuery.isFetching]);
 
   return (
-    <div className=" flex w-full justify-center">
-      <div className="flex size-full max-w-[120rem] gap-x-6 p-6">
-        <div className="flex w-[31.25rem] flex-col items-center rounded-lg border border-panel-border bg-panel-background-transparent p-6">
+    <div className="flex w-full justify-center">
+      <div className="flex size-full max-w-480 gap-x-6 p-6">
+        <div className="flex w-125 flex-col items-center rounded-lg border border-panel-border bg-panel-background-transparent p-6">
           <div className="flex flex-col items-center gap-y-4">
             <ShokoIcon className="size-32" />
             <div className="flex items-center gap-x-2 font-semibold">
@@ -112,7 +110,7 @@ const FirstRunPage = () => {
             <MenuItem text="AniDB Account" id="anidb-account" />
             <MenuItem text="Metadata Sources" id="metadata-sources" />
             <MenuItem text="Start Server" id="start-server" />
-            <MenuItem text="Import Folders" id="import-folders" />
+            <MenuItem text="Managed Folders" id="managed-folders" />
             <MenuItem text="Data Collection" id="data-collection" />
           </div>
 
@@ -149,7 +147,7 @@ const FirstRunPage = () => {
           />
         </div>
       </div>
-      <div className="login-image-default fixed left-0 top-0 -z-10 size-full opacity-20" />
+      <div className="login-image-default fixed top-0 left-0 -z-10 size-full opacity-20" />
     </div>
   );
 };

@@ -1,5 +1,4 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { mdiChevronRight, mdiMagnify, mdiMinusCircleOutline, mdiTagOffOutline, mdiTagOutline } from '@mdi/js';
 import { Icon } from '@mdi/react';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -11,6 +10,7 @@ import Input from '@/components/Input/Input';
 import ModalPanel from '@/components/Panels/ModalPanel';
 import { useAniDBTagsQuery, useUserTagsQuery } from '@/core/react-query/tag/queries';
 import { selectFilterTags, setFilterTag } from '@/core/slices/collection';
+import { useDispatch, useSelector } from '@/core/store';
 
 import type { FilterExpression, FilterTag } from '@/core/types/api/filter';
 import type { TagType } from '@/core/types/api/tags';
@@ -42,7 +42,7 @@ const TagList = (
       >
         <div className="absolute top-0 w-full" style={{ height: virtualizer.getTotalSize() }}>
           <div
-            className="absolute left-0 top-0 w-full"
+            className="absolute top-0 left-0 w-full"
             style={{ transform: `translateY(${virtualItems[0]?.start ?? 0}px)` }}
           >
             {virtualItems.map((virtualRow) => {

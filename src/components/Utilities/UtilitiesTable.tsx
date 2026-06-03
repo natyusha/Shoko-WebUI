@@ -1,5 +1,4 @@
 import React, { useMemo, useRef } from 'react';
-import { useSelector } from 'react-redux';
 import { mdiLoading, mdiMenuUp } from '@mdi/js';
 import { Icon } from '@mdi/react';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -7,9 +6,10 @@ import cx from 'classnames';
 import { debounce } from 'lodash';
 
 import { criteriaMap } from '@/components/Utilities/constants';
+import { useSelector } from '@/core/store';
+import { handleShiftSelect } from '@/core/util';
 
 import type { UtilityHeaderType } from '@/components/Utilities/constants';
-import type { RootState } from '@/core/store';
 import type { EpisodeType } from '@/core/types/api/episode';
 import type { FileSortCriteriaEnum, FileType } from '@/core/types/api/file';
 import type { SeriesType } from '@/core/types/api/series';
@@ -27,7 +27,7 @@ type Props = {
   sortCriteria?: FileSortCriteriaEnum;
   handleRowSelect?: (id: number, select: boolean) => void;
   rowSelection?: Record<number, boolean>;
-  setSelectedRows?: Updater<Record<number, boolean>>;
+  setRowSelection?: Updater<Record<number, boolean>>;
   fetchNextPreviewPage?: (index?: number) => Promise<unknown>;
   isRenamer?: boolean;
 };
@@ -37,7 +37,7 @@ const selectRowId = (target: EpisodeType | FileType | SeriesType) => ('ID' in ta
 const Row = (
   props: {
     columns: UtilityHeaderType<EpisodeType | FileType | SeriesType>[];
-    handleRowSelect: (event: React.MouseEvent, row: VirtualItem) => void;
+    handleRowSelect: (event: React.MouseEvent, index: number) => void;
     row: EpisodeType | FileType | SeriesType;
     selected: boolean;
     virtualRow: VirtualItem;
@@ -50,18 +50,22 @@ const Row = (
     selected,
     virtualRow,
   } = props;
-  const handleClick = (event: React.MouseEvent) => {
-    handleRowSelect(event, virtualRow);
+
+  const handleMouseDown = (event: React.MouseEvent) => {
+    // Prevent native text selection on shift+click to avoid flash of selection
+    // and allow clean shift-range selection behavior
+    if (event.shiftKey) event.preventDefault();
   };
 
   return (
     <div
       className={cx(
-        'relative cursor-pointer rounded-lg border p-4 text-left transition-colors border-panel-border',
+        'relative cursor-pointer rounded-lg border border-panel-border p-4 text-left transition-colors',
         virtualRow.index % 2 === 0 ? 'bg-panel-background' : 'bg-panel-background-alt',
         selected ? 'bg-panel-background-selected-row' : '',
       )}
-      onClick={handleClick}
+      onClick={event => handleRowSelect(event, virtualRow.index)}
+      onMouseDown={handleMouseDown}
     >
       {!row
         ? <Icon path={mdiLoading} size={1} spin className="m-auto text-panel-text-primary" />
@@ -152,12 +156,12 @@ const UtilitiesTable = (props: Props) => {
     isRenamer,
     rowSelection,
     rows,
-    setSelectedRows,
+    setRowSelection,
     setSortCriteria,
     skipSort,
     sortCriteria,
   } = props;
-  const renamerPreviews = useSelector((state: RootState) => state.utilities.renamer.renameResults);
+  const renamerPreviews = useSelector(state => state.utilities.renamer.results);
 
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
@@ -188,37 +192,15 @@ const UtilitiesTable = (props: Props) => {
     [fetchNextPreviewPage],
   );
 
-  const lastRowSelected = useRef<VirtualItem | null>(null);
-  const handleSelect = (event: React.MouseEvent, virtualRow: VirtualItem) => {
+  const lastRowIndex = useRef<number>(undefined);
+  const handleSelect = (event: React.MouseEvent, index: number) => {
     if (!rowSelection || !handleRowSelect) return;
-    try {
-      if (setSelectedRows && event.shiftKey) {
-        window?.getSelection()?.removeAllRanges();
-        const lrIndex = lastRowSelected?.current?.index ?? virtualRow.index;
-        const fromIndex = Math.min(lrIndex, virtualRow.index);
-        const toIndex = Math.max(lrIndex, virtualRow.index);
-        const isSelected = lastRowSelected.current?.index !== undefined
-          ? rowSelection[selectRowId(rows[lastRowSelected.current?.index])]
-          : true;
-        const tempRowSelection: Record<number, boolean> = {};
-        for (let index = fromIndex; index <= toIndex; index += 1) {
-          const id = selectRowId(rows[index]);
-          tempRowSelection[id] = isSelected;
-        }
-        setSelectedRows(tempRowSelection);
-      } else if (window?.getSelection()?.type !== 'Range') {
-        const id = selectRowId(rows[virtualRow.index]);
-        handleRowSelect(id, !rowSelection[id]);
-        lastRowSelected.current = virtualRow;
-      }
-    } catch (error) {
-      console.error(error);
-    }
+    handleShiftSelect({ event, handleRowSelect, index, lastRowIndex, rowSelection, rows, setRowSelection });
   };
 
   return (
     <div className="flex w-full grow flex-col overflow-y-auto pr-4" ref={parentRef}>
-      <div className="sticky top-0 z-[1] bg-panel-background-alt">
+      <div className="sticky top-0 z-1 bg-panel-background-alt">
         <div className="flex rounded-lg border border-panel-border bg-panel-table-header p-4 font-semibold">
           {columns.map(column => (
             <HeaderItem
@@ -236,7 +218,7 @@ const UtilitiesTable = (props: Props) => {
       <div className="relative grow">
         <div className="absolute top-0 w-full" style={{ height: virtualizer.getTotalSize() }}>
           <div
-            className="absolute left-0 top-0 w-full"
+            className="absolute top-0 left-0 w-full"
             style={{ transform: `translateY(${virtualItems[0]?.start ?? 0}px)` }}
           >
             {virtualItems.map((virtualRow) => {

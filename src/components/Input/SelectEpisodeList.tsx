@@ -74,14 +74,19 @@ const SelectButton = ({ open, rowIdx, selected }: { open: boolean, rowIdx: numbe
 const SelectEpisodeList = React.memo((
   { disabled = false, onChange, options, rowIdx, value }: Props,
 ) => {
-  const [epFilter, setEpFilter] = useState(0);
+  const [epFilter, setEpFilter] = useState('');
   const [selected, setSelected] = useState<Option>(options[0]);
 
   useEffect(() => {
     setSelected(find(options, ['value', value]) ?? {} as Option);
   }, [value, options]);
 
-  const handleEpFilter = (event: React.ChangeEvent<HTMLInputElement>) => setEpFilter(toInteger(event.target.value));
+  const handleEpFilter = (event: React.ChangeEvent<HTMLInputElement>) => setEpFilter(event.target.value);
+
+  // Headless UI throws errors if keypresses bubble sepcifically space is treated as select item and causes errors if list is filtered to empty
+  const suppressKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    event.stopPropagation();
+  };
 
   const selectOption = (selectedOption: Option) => {
     setSelected(selectedOption);
@@ -108,18 +113,19 @@ const SelectEpisodeList = React.memo((
                 padding: '1rem',
                 gap: '0.25rem',
               }}
-              className="z-110 w-[--button-width] origin-top rounded-lg bg-panel-background transition [--anchor-max-height:24rem] focus:outline-hidden"
+              className="z-110 w-(--button-width) origin-top rounded-lg bg-panel-background transition [--anchor-max-height:24rem] focus:outline-hidden"
             >
               <Input
                 autoFocus
                 className="grow"
                 id="epFilter"
                 type="text"
-                value={epFilter === 0 ? '' : epFilter}
+                value={epFilter}
                 onChange={handleEpFilter}
+                onKeyDown={suppressKeydown}
                 inputClassName="py-4 px-3"
                 startIcon={mdiMagnify}
-                placeholder="Input Episode Number..."
+                placeholder="Filter by Episode Number or Name..."
               />
 
               {/* 4rem below is to account for height of the input component */}
@@ -129,7 +135,10 @@ const SelectEpisodeList = React.memo((
                     {idx !== 0 && item.type !== options[idx - 1].type && (
                       <div className="my-3 h-0.5 border border-panel-border bg-panel-background-alt" />
                     )}
-                    {((epFilter > 0 && item.number === epFilter) || epFilter === 0) && <SelectOption option={item} />}
+                    {(epFilter === ''
+                      || (toInteger(epFilter) > 0
+                        ? item.number === toInteger(epFilter)
+                        : item.label.toLowerCase().includes(epFilter.toLowerCase()))) && <SelectOption option={item} />}
                   </React.Fragment>
                 ))}
               </div>

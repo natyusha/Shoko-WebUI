@@ -17,7 +17,7 @@ import {
   useFilteredGroupsInfiniteQuery,
 } from '@/core/react-query/filter/queries';
 import { useGroupQuery } from '@/core/react-query/group/queries';
-import queryClient from '@/core/react-query/queryClient';
+import { resetQueries } from '@/core/react-query/queryClient';
 import { usePatchSettingsMutation } from '@/core/react-query/settings/mutations';
 import { useSettingsQuery } from '@/core/react-query/settings/queries';
 import { useGroupViewQuery } from '@/core/react-query/webui/queries';
@@ -36,13 +36,11 @@ const getFilter = (
   sortingCriteria?: SortingCriteria,
 ): CreateOrUpdateFilterType => {
   let finalCondition: FilterCondition | undefined;
+  let finalSortingCriteria = sortingCriteria;
   const cleanFilterConditions = filterConditions.filter(condition => !!condition);
   if (query) {
     let searchCondition: FilterCondition = {
-      Type: 'AnyContains',
-      Left: {
-        Type: 'NamesSelector',
-      },
+      Type: 'HasFuzzyName',
       Parameter: query,
     };
 
@@ -65,6 +63,10 @@ const getFilter = (
     } else {
       finalCondition = buildFilter([searchCondition]);
     }
+
+    finalSortingCriteria = !sortingCriteria
+      ? { Type: 'FuzzyNameRelevance', Parameter: query, IsInverted: false }
+      : { Type: 'FuzzyNameRelevance', Parameter: query, IsInverted: false, Next: sortingCriteria };
   } else if (cleanFilterConditions.length > 0) {
     finalCondition = buildFilter(cleanFilterConditions);
   }
@@ -74,7 +76,7 @@ const getFilter = (
       ? {
         ApplyAtSeriesLevel: true,
         Expression: finalCondition,
-        Sorting: sortingCriteria ?? { Type: 'Name', IsInverted: false },
+        Sorting: finalSortingCriteria ?? { Type: 'Name', IsInverted: false },
       }
       : {}
   );
@@ -227,7 +229,7 @@ const Collection = () => {
     if (newMode === 'list') {
       // If we invalidate instead of resetting, if we had 5 pages loaded in poster view, it will again load 5 pages
       // after invalidation even if we are at the top of the page
-      queryClient.resetQueries({ queryKey: ['filter', 'preview', 'groups'] }).catch(console.error);
+      resetQueries(['filter', 'preview', 'groups']);
     }
     const newSettings = cloneDeep(settings);
     newSettings.WebUI_Settings.collection.view = newMode;
@@ -240,7 +242,7 @@ const Collection = () => {
       <div className="flex grow flex-col gap-y-6">
         <div className="sticky -top-6 z-10 flex items-center justify-between rounded-lg border border-panel-border bg-panel-background p-6">
           <CollectionTitle
-            // eslint-disable-next-line no-nested-ternary
+            // oxlint-disable-next-line no-nested-ternary
             count={(total === 0 && isFetching) ? -1 : (isSeries ? total : groupsTotal)}
             filterName={filterQuery?.data?.Name}
             groupName={groupQuery?.data?.Name}

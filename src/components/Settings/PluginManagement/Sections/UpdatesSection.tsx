@@ -4,11 +4,12 @@ import { Icon } from '@mdi/react';
 import { filter } from 'lodash';
 import { useToggle } from 'usehooks-ts';
 
+import { Badge } from '@/components/Badge';
 import Button from '@/components/Input/Button';
 import PluginInstallModal from '@/components/Settings/PluginManagement/Dialogs/PluginInstallModal';
-import toast from '@/components/Toast';
 import { useCheckPluginPackageUpdatesMutation } from '@/core/react-query/plugin-package/mutations';
 import { usePluginPackageUpdatesQuery } from '@/core/react-query/plugin-package/queries';
+import toast from '@/core/toast';
 
 import type { PluginPackageUpdateInfoType } from '@/core/types/api/plugin-package';
 
@@ -79,7 +80,14 @@ const UpdatesSection = ({ query }: Props) => {
               >
                 <div className="flex justify-between">
                   <div>
-                    <div className="font-semibold">{update.Name}</div>
+                    <div className="flex gap-x-2 font-semibold">
+                      {update.Name}
+                      {update.Latest.Release.IsInstalled && (
+                        <Badge className="bg-panel-text-warning text-button-primary-text">
+                          Restart required
+                        </Badge>
+                      )}
+                    </div>
                     <div className="text-sm opacity-65">
                       {update.Current.Release.Version}
                       &nbsp;→&nbsp;
@@ -87,12 +95,13 @@ const UpdatesSection = ({ query }: Props) => {
                     </div>
                   </div>
                   <Button
-                    buttonType="primary"
+                    buttonType={update.Latest.Release.IsInstalled ? 'secondary' : 'primary'}
                     buttonSize="small"
                     onClick={() => {
                       setSelectedPackage(update);
                       toggleUpdateModal();
                     }}
+                    disabled={update.Latest.Release.IsInstalled}
                   >
                     Upgrade
                   </Button>

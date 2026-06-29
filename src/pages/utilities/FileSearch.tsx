@@ -24,7 +24,6 @@ import Button from '@/components/Input/Button';
 import Input from '@/components/Input/Input';
 import ShokoPanel from '@/components/Panels/ShokoPanel';
 import ShokoIcon from '@/components/ShokoIcon';
-import toast from '@/components/Toast';
 import FilesSummary from '@/components/Utilities/FilesSummary';
 import ItemCount from '@/components/Utilities/ItemCount';
 import MenuButton from '@/components/Utilities/Unrecognized/MenuButton';
@@ -41,6 +40,7 @@ import { invalidateQueries } from '@/core/react-query/queryClient';
 import { useSeriesQuery } from '@/core/react-query/series/queries';
 import { addFiles } from '@/core/slices/utilities/renamer';
 import { useDispatch } from '@/core/store';
+import toast from '@/core/toast';
 import { FileSortCriteriaEnum } from '@/core/types/api/file';
 import { copyToClipboard } from '@/core/util';
 import getEd2kLink from '@/core/utilities/getEd2kLink';
@@ -173,7 +173,7 @@ const Menu = (
   );
 };
 
-const MediaInfoDetails = React.memo(({ file }: { file: FileType }) => {
+const MediaInfoDetails = ({ file }: { file: FileType }) => {
   const mediaInfo = useMediaInfo(file);
   const ed2kHash = useMemo(() => getEd2kLink(file), [file]);
 
@@ -237,9 +237,9 @@ const MediaInfoDetails = React.memo(({ file }: { file: FileType }) => {
       </div>
     </>
   );
-});
+};
 
-const FileDetails = React.memo(({ fileId }: { fileId: number }) => {
+const FileDetails = ({ fileId }: { fileId: number }) => {
   const { data: file, isPending: fileQueryIsPending } = useFileQuery(
     fileId,
     {
@@ -332,7 +332,7 @@ const FileDetails = React.memo(({ fileId }: { fileId: number }) => {
       <MediaInfoDetails file={file} />
     </div>
   );
-});
+};
 
 const FileSearch = () => {
   const {

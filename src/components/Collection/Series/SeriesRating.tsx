@@ -17,7 +17,7 @@ type StarIconProps = {
   handleVote: (event: React.MouseEvent<HTMLDivElement>) => void;
 };
 
-const StarIcon = React.memo(({ handleHover, handleVote, hovered, index }: StarIconProps) => (
+const StarIcon = ({ handleHover, handleVote, hovered, index }: StarIconProps) => (
   <div
     id={index}
     className="cursor-pointer text-panel-text-primary"
@@ -26,7 +26,7 @@ const StarIcon = React.memo(({ handleHover, handleVote, hovered, index }: StarIc
   >
     <Icon path={hovered ? mdiStar : mdiStarOutline} size={1} />
   </div>
-));
+);
 
 const SeriesRating = ({ ratingValue, seriesId }: Props) => {
   const { mutate: voteSeries } = useVoteSeriesMutation(seriesId);
@@ -49,7 +49,7 @@ const SeriesRating = ({ ratingValue, seriesId }: Props) => {
     <div className="flex gap-x-0.5" id="-1" onMouseLeave={handleClear}>
       {Array.from({ length: 10 }).map((_, index) => (
         <StarIcon
-          // eslint-disable-next-line react/no-array-index-key
+          // oxlint-disable-next-line react/no-array-index-key -- will not change between renders
           key={`star-${index}`}
           index={index.toString()}
           hovered={hoveredStar >= index}

@@ -21,7 +21,8 @@ export type ExpressionType =
   | 'StringRegexMatches'
   | 'StringStartsWith'
   | 'HasTag'
-  | 'HasCustomTag';
+  | 'HasCustomTag'
+  | 'HasFuzzyName';
 
 type SortingType =
   | 'AddedDate'
@@ -29,6 +30,7 @@ type SortingType =
   | 'AudioLanguageCount'
   | 'AverageAniDBRating'
   | 'EpisodeCount'
+  | 'FuzzyNameRelevance'
   | 'HighestAniDBRating'
   | 'HighestUserRating'
   | 'LastAddedDate'
@@ -77,6 +79,7 @@ export type FilterTag = {
 
 export type SortingCriteria = {
   Type: SortingType;
+  Parameter?: string;
   Next?: SortingCriteria;
   IsInverted: boolean;
 };

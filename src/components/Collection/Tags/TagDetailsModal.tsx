@@ -14,7 +14,7 @@ import useFlattenListResult from '@/hooks/useFlattenListResult';
 import type { SeriesType } from '@/core/types/api/series';
 import type { TagType } from '@/core/types/api/tags';
 
-const SeriesLink = React.memo(({ extraPadding, series }: { series: SeriesType, extraPadding: boolean }) => (
+const SeriesLink = ({ extraPadding, series }: { series: SeriesType, extraPadding: boolean }) => (
   <Link
     to={`/webui/collection/series/${series.IDs.ID}`}
     className={cx(
@@ -32,7 +32,7 @@ const SeriesLink = React.memo(({ extraPadding, series }: { series: SeriesType, e
     </span>
     <Icon path={mdiOpenInNew} size={1} className="shrink-0" />
   </Link>
-));
+);
 
 const SeriesVirtualizer = (
   { data, dataSize, fetchNext }: { data: SeriesType[], dataSize: number, fetchNext: () => void },
@@ -88,7 +88,7 @@ const TagDetailsModal = ({ onClose, show, tag }: { show: boolean, tag?: TagType,
   const fetchNextDebounced = useMemo(() =>
     debounce(() => {
       if (!isFetchingNextPage && seriesData.length !== seriesCount) {
-        fetchNextPage().catch(() => {});
+        fetchNextPage().catch(console.error);
       }
     }, 50), [fetchNextPage, isFetchingNextPage, seriesCount, seriesData.length]);
 

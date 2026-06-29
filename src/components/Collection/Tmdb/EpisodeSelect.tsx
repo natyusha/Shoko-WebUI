@@ -23,7 +23,7 @@ type Props = {
   tmdbEpisode?: TmdbEpisodeType;
 };
 
-const EpisodeSelect = React.memo((props: Props) => {
+const EpisodeSelect = (props: Props) => {
   const { isDisabled, isOdd, override, overrideLink, tmdbEpisode: initialTmdbEpisode } = props;
   const [searchParams] = useSearchParams();
   const tmdbId = toNumber(searchParams.get('id'));
@@ -31,7 +31,7 @@ const EpisodeSelect = React.memo((props: Props) => {
   const [searchText, setSearchText] = useState('');
   const [debouncedSearch] = useDebounceValue(searchText, 200);
 
-  const { fetchNextPage: fetchNextEpisodesPage, ...episodesQuery } = useTmdbShowEpisodesQuery(tmdbId, {
+  const episodesQuery = useTmdbShowEpisodesQuery(tmdbId, {
     search: debouncedSearch,
     pageSize: 30,
   });
@@ -68,9 +68,9 @@ const EpisodeSelect = React.memo((props: Props) => {
   const fetchNextPageDebounced = useMemo(
     () =>
       debounce(() => {
-        fetchNextEpisodesPage().catch(() => {});
+        episodesQuery.fetchNextPage().catch(console.error);
       }, 100),
-    [fetchNextEpisodesPage],
+    [episodesQuery],
   );
 
   return (
@@ -79,10 +79,12 @@ const EpisodeSelect = React.memo((props: Props) => {
       by="ID"
       onChange={handleSelect}
       disabled={isDisabled}
+      as="div"
+      className="flex grow basis-0"
     >
       <ListboxButton
         className={cx(
-          'flex grow basis-0 items-center gap-x-6 rounded-lg border border-panel-border p-4',
+          'flex grow items-center gap-x-6 rounded-lg border border-panel-border p-4',
           'data-open:border-panel-text-primary',
           isOdd ? 'bg-panel-background-alt' : 'bg-panel-background',
           isDisabled && 'opacity-65',
@@ -93,7 +95,7 @@ const EpisodeSelect = React.memo((props: Props) => {
         {({ open }) => (
           <>
             <div className="w-8 shrink-0">
-              {/* eslint-disable-next-line no-nested-ternary */}
+              {/* oxlint-disable-next-line no-nested-ternary */}
               {tmdbEpisode?.SeasonNumber != null
                 ? (tmdbEpisode.SeasonNumber === 0 ? 'SP' : `S${padNumber(tmdbEpisode.SeasonNumber)}`)
                 : 'XX'}
@@ -231,6 +233,6 @@ const EpisodeSelect = React.memo((props: Props) => {
       </Transition>
     </Listbox>
   );
-});
+};
 
 export default EpisodeSelect;

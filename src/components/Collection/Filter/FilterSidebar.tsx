@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import { mdiContentSaveOutline, mdiFilterPlusOutline } from '@mdi/js';
-import { keys, map, values } from 'lodash';
+import { keys, map } from 'lodash';
 
 import AddCriteriaModal from '@/components/Collection/Filter/AddCriteriaModal';
 import DefaultCriteria from '@/components/Collection/Filter/DefaultCriteria';
@@ -83,12 +83,26 @@ const FilterSidebar = () => {
   const [savePresetModal, showSavePresetModal] = useState(false);
   const dispatch = useDispatch();
   const selectedCriteria = useSelector(state => state.collection.filterCriteria);
+  const selectedConditions = useSelector(state => state.collection.filterConditions);
+  const selectedMatch = useSelector(state => state.collection.filterMatch);
+  const selectedTags = useSelector(state => state.collection.filterTags);
+  const selectedValues = useSelector(state => state.collection.filterValues);
   const activeCriteriaWithValues = useSelector(selectActiveCriteriaWithValues);
 
   const isFilterValid = keys(selectedCriteria).length > 0
     && keys(selectedCriteria).length === keys(activeCriteriaWithValues).length;
 
-  const finalFilterExpression = isFilterValid ? buildSidebarFilter(values(selectedCriteria)) : undefined;
+  const finalFilterExpression = isFilterValid
+    ? buildSidebarFilter(
+      Object.values(selectedCriteria),
+      {
+        filterConditions: selectedConditions,
+        filterMatch: selectedMatch,
+        filterTags: selectedTags,
+        filterValues: selectedValues,
+      },
+    )
+    : undefined;
 
   useEffect(() => {
     if (isFilterValid && finalFilterExpression) dispatch(setActiveFilter(finalFilterExpression));

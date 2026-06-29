@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { mdiCog, mdiInformationVariantCircleOutline, mdiLoading } from '@mdi/js';
 import Icon from '@mdi/react';
 import { produce } from 'immer';
@@ -10,7 +10,6 @@ import ProviderInfoModal from '@/components/Dialogs/ProviderInfoModal';
 import Button from '@/components/Input/Button';
 import Checkbox from '@/components/Input/Checkbox';
 import ReleaseSettings from '@/components/Settings/HashingAndReleaseSettings/ReleaseSettings';
-import toast from '@/components/Toast';
 import { useUpdateHashingSettingsMutation } from '@/core/react-query/hashing/mutations';
 import { useHashingProvidersQuery, useHashingSummaryQuery } from '@/core/react-query/hashing/queries';
 import { useUpdateReleaseInfoProvidersMutation } from '@/core/react-query/release-info/mutations';
@@ -20,6 +19,7 @@ import { useSettingsQuery } from '@/core/react-query/settings/queries';
 import { hideProviderInfo, showProviderInfo } from '@/core/slices/modals/providerInfo';
 import { clearReleaseSettings, setProviders } from '@/core/slices/settings/release';
 import { useDispatch, useSelector } from '@/core/store';
+import toast from '@/core/toast';
 import useToggleModalKeybinds from '@/hooks/useToggleModalKeybinds';
 
 import type { HashProviderInfoType, HashingSummaryType } from '@/core/react-query/hashing/types';
@@ -45,10 +45,11 @@ const HashingAndReleaseSettings = () => {
   const newWebuiProviderOrder = webuiProviders
     .map(provider => ({ id: provider.ID, enabled: provider.IsEnabled }));
 
-  useEffect(() => {
+  const initializeSettings = useCallback(() => {
     if (
       !releaseProvidersQuery.data || !hashingProvidersQuery.data || !hashingSummaryQuery.data
     ) return;
+
     setHashingSettings(hashingSummaryQuery.data);
 
     const cleanWebuiProviders = settings.WebUI_Settings.releaseInfoProviders
@@ -67,12 +68,16 @@ const HashingAndReleaseSettings = () => {
       webuiProviders: [...cleanWebuiProviders, ...newProviders],
     }));
   }, [
+    dispatch,
     hashingProvidersQuery.data,
     hashingSummaryQuery.data,
     releaseProvidersQuery.data,
     settings,
-    dispatch,
   ]);
+
+  useEffect(() => {
+    initializeSettings();
+  }, [initializeSettings]);
 
   useEffect(() => () => {
     dispatch(clearReleaseSettings());
@@ -106,10 +111,6 @@ const HashingAndReleaseSettings = () => {
   useEffect(() => () => {
     if (toastId.current) toast.dismiss(toastId.current);
   }, []);
-
-  const handleCancel = () => {
-    setShowHashTypesModal(false);
-  };
 
   const handleSave = () => {
     if (hashingSettingsChanged) {
@@ -216,7 +217,7 @@ const HashingAndReleaseSettings = () => {
 
       <div className="flex justify-end gap-x-3 font-semibold">
         <Button
-          onClick={handleCancel}
+          onClick={initializeSettings}
           buttonType="secondary"
           buttonSize="normal"
           disabled={!unsavedChanges}
@@ -234,6 +235,7 @@ const HashingAndReleaseSettings = () => {
       </div>
 
       <ProviderInfoModal />
+
       <HashTypesModal
         show={showHashTypesModal}
         onClose={() => setShowHashTypesModal(false)}

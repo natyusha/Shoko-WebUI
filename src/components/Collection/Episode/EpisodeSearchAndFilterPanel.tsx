@@ -18,7 +18,7 @@ type Props = {
   onFilterChange: (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
 };
 
-const EpisodeSearchAndFilterPanel = React.memo((props: Props) => {
+const EpisodeSearchAndFilterPanel = (props: Props) => {
   const {
     availability,
     hasMissing,
@@ -35,7 +35,7 @@ const EpisodeSearchAndFilterPanel = React.memo((props: Props) => {
     <div className="flex flex-col gap-y-6">
       <ShokoPanel
         title="Search & Filter"
-        className="w-100"
+        className="w-full lg:w-100"
         contentClassName="gap-y-6"
         fullHeight={false}
         sticky
@@ -132,6 +132,6 @@ const EpisodeSearchAndFilterPanel = React.memo((props: Props) => {
       </ShokoPanel>
     </div>
   );
-});
+};
 
 export default EpisodeSearchAndFilterPanel;

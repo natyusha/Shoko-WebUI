@@ -8,10 +8,10 @@ import { useDebounceValue } from 'usehooks-ts';
 
 import Button from '@/components/Input/Button';
 import Input from '@/components/Input/Input';
-import toast from '@/components/Toast';
 import { useSettingsQuery } from '@/core/react-query/settings/queries';
 import { useTmdbRefreshMutation } from '@/core/react-query/tmdb/mutations';
 import { useTmdbAutoSearchQuery, useTmdbSearchQuery } from '@/core/react-query/tmdb/queries';
+import toast from '@/core/toast';
 import { SeriesTypeEnum } from '@/core/types/api/series';
 
 import type { TmdbSearchResultType } from '@/core/types/api/tmdb';
@@ -22,7 +22,7 @@ type SearchResultRowProps = {
   selectLink: (tmdbId: number) => void;
 };
 
-const SearchResultRow = React.memo(({ linkType, result, selectLink }: SearchResultRowProps) => {
+const SearchResultRow = ({ linkType, result, selectLink }: SearchResultRowProps) => {
   const handleClick = () => {
     selectLink(result.ID);
   };
@@ -47,9 +47,9 @@ const SearchResultRow = React.memo(({ linkType, result, selectLink }: SearchResu
       </div>
     </div>
   );
-});
+};
 
-const TmdbLinkSelectPanel = React.memo(({ seriesType }: { seriesType?: SeriesTypeEnum }) => {
+const TmdbLinkSelectPanel = ({ seriesType }: { seriesType?: SeriesTypeEnum }) => {
   const { seriesId } = useParams();
 
   const [, setSearchParams] = useSearchParams();
@@ -193,6 +193,6 @@ const TmdbLinkSelectPanel = React.memo(({ seriesType }: { seriesType?: SeriesTyp
       </div>
     </div>
   );
-});
+};
 
 export default TmdbLinkSelectPanel;

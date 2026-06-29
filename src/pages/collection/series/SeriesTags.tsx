@@ -14,7 +14,7 @@ import type { TagType } from '@/core/types/api/tags';
 
 const cleanString = (input = '') => input.replaceAll(' ', '').toLowerCase();
 
-const SingleTag = React.memo(({ onTagExpand, tag }: { tag: TagType, onTagExpand: (tag: TagType) => void }) => {
+const SingleTag = ({ onTagExpand, tag }: { tag: TagType, onTagExpand: (tag: TagType) => void }) => {
   const emitTag = () => onTagExpand(tag);
   const tagDescription = tag.Description?.trim() ? tag.Description : 'Tag Description Not Available.';
 
@@ -43,7 +43,7 @@ const SingleTag = React.memo(({ onTagExpand, tag }: { tag: TagType, onTagExpand:
       />
     </div>
   );
-});
+};
 
 const SeriesTags = () => {
   const { series } = useOutletContext<SeriesContextType>();
@@ -91,7 +91,7 @@ const SeriesTags = () => {
       ) => (
         !(tagSourceFilter.has(Source) || (IsSpoiler && !showSpoilers))
         && ((debouncedSearch === '')
-          || [Name, Description].some(str => cleanString(str).match(debouncedSearch)))
+          || [Name, Description].some(str => cleanString(str).includes(debouncedSearch)))
       )).sort((tagA, tagB) => (sort ? tagA.Name.localeCompare(tagB.Name) : 0)),
     [debouncedSearch, showSpoilers, sort, tagSourceFilter, tagsQueryData],
   );

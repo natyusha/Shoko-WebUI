@@ -130,7 +130,7 @@ const duplicatesEpisodeFileCountColumn: UtilityHeaderType<EpisodeType> = {
       episode.Files,
       file => file.Locations,
     ).filter(location => !!location.AbsolutePath).length;
-    count = count === 1 ? 0 : (count / 2);
+    count -= 1;
     return (
       <>
         <span className="text-panel-text-important">{count}</span>
@@ -183,7 +183,7 @@ const SeriesList = (
   );
   const [episodes, episodeCount] = useFlattenListResult(episodesQuery.data);
 
-  const [showEpisodeModal, toggleEpisodeModal] = useToggle(false);
+  const [showEpisodeModal, toggleEpisodeModal, setEpisodeModal] = useToggle(false);
   const [selectedEpisode, setSelectedEpisode] = useState(-1);
 
   const {
@@ -197,6 +197,10 @@ const SeriesList = (
     setSelectedEpisodes(selectedRows);
   }, [selectedRows, setSelectedEpisodes]);
 
+  useEffect(() => {
+    if (!episodeCount) setEpisodeModal(false);
+  }, [episodeCount, setEpisodeModal]);
+
   const handleEpisodeSelect = (episodeId: number, select: boolean) => {
     if (type === 'MissingEpisodes') handleRowSelect(episodeId, select);
     else {
@@ -205,20 +209,35 @@ const SeriesList = (
     }
   };
 
-  const handleEpisodeChange = (changeType: 'previous' | 'next') => {
-    if (
-      (changeType === 'next' && selectedEpisode === episodes.length - 1)
-      || (changeType === 'previous' && selectedEpisode <= 0)
-    ) return;
+  const handleEpisodeChange = async (changeType: 'previous' | 'next') => {
+    const targetIndex = changeType === 'previous' ? selectedEpisode - 1 : selectedEpisode + 1;
 
-    if (changeType === 'previous') setSelectedEpisode(index => index - 1);
-    else setSelectedEpisode(index => index + 1);
+    if (targetIndex < 0 || targetIndex >= episodeCount) return;
+
+    // Fetch more pages if the target episode hasn't been loaded yet.
+    let loadedCount = episodes.length;
+    while (loadedCount <= targetIndex) {
+      // Each fetchNextPage depends on the previous page completing (getNextPageParam),
+      // so these must run sequentially — parallelizing with Promise.all is not possible.
+      // Valid exception for below rule
+      // oxlint-disable-next-line no-await-in-loop
+      const result = await episodesQuery.fetchNextPage();
+      const newLoadedCount = result.data ? flatMap(result.data.pages, 'List').length : loadedCount;
+      if (newLoadedCount === loadedCount) break; // No more data to load
+      loadedCount = newLoadedCount;
+    }
+
+    setSelectedEpisode(targetIndex);
   };
 
   useEffect(() => {
     setSelectedSeriesId(selectedSeries);
     setSeriesCount(seriesCount);
   }, [selectedSeries, seriesCount, setSelectedSeriesId, setSeriesCount]);
+
+  useEffect(() => {
+    setSelectedSeries(0);
+  }, [seriesQuery.data]);
 
   const episodeColumns = useMemo(() => {
     if (type !== 'MissingEpisodes') {
@@ -299,6 +318,20 @@ const SeriesList = (
                   setRowSelection={setRowSelection}
                 />
               )}
+
+              {selectedSeries > 0 && episodesQuery.isSuccess && episodeCount === 0 && (
+                <div className="flex grow items-center justify-center">
+                  {type !== 'MissingEpisodes'
+                    ? (
+                      <>
+                        All&nbsp;
+                        {type === 'DuplicateFiles' ? 'duplicates' : 'multiples'}
+                        &nbsp;cleared!
+                      </>
+                    )
+                    : 'No missing episodes for this series!'}
+                </div>
+              )}
             </>
           )}
         </div>
@@ -309,10 +342,12 @@ const SeriesList = (
           onClose={toggleEpisodeModal}
           show={showEpisodeModal}
           episode={episodes[selectedEpisode]}
-          handleEpisodeChange={handleEpisodeChange}
+          handleEpisodeChange={(changeType) => {
+            handleEpisodeChange(changeType).catch(console.error);
+          }}
           episodeCount={episodeCount}
           episodeIndex={selectedEpisode}
-          seriesId={selectedSeries}
+          isFetching={episodesQuery.isFetchingNextPage}
           type={type}
         />
       )}

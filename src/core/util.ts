@@ -10,9 +10,10 @@ import formatThousands from 'format-thousands';
 import { enableMapSet } from 'immer';
 import { reduce, toNumber } from 'lodash';
 
-import toast from '@/components/Toast';
+import toast from '@/core/toast';
 
 import type { EpisodeType } from './types/api/episode';
+import type { CollectionGroupType } from './types/api/collection';
 import type { FileType } from './types/api/file';
 import type { SeriesType } from './types/api/series';
 import type { ManualLinkType } from './types/utilities/unrecognized-utility';
@@ -27,7 +28,7 @@ dayjs.extend(customParseFormatPlugin);
 export { default as dayjs } from 'dayjs';
 
 /** Shared stale time: ~100 days. Used for relatively static data that rarely changes server-side. */
-export const STALE_TIME = 86400 * 100000;
+export const INFINITE_STALE_TIME = 86400 * 100000;
 
 // Enables immer plugin to support Map and Set
 enableMapSet();
@@ -39,6 +40,9 @@ export const getMinimumServerVersion = () => VITE_MIN_SERVER_VERSION;
 export const getUiVersion = () => (DEV ? VITE_GITHASH : VITE_APPVERSION);
 
 export const formatThousand = (num: number) => formatThousands(num, ',');
+
+export const getMainPoster = (target: SeriesType | CollectionGroupType) =>
+  target?.Images?.Posters?.find(poster => poster.Preferred) ?? target?.Images?.Posters?.[0];
 
 export const copyToClipboard = async (text: string, entityName?: string) => {
   try {
@@ -55,14 +59,25 @@ export const copyToClipboard = async (text: string, entityName?: string) => {
 };
 
 /**
- * To convert TimeSpan returned by ASP.NET for duration (eg. 00:24:02.2424) to milliseconds
+ * To convert a TimeSpan string returned by the API in the "[d.]hh:mm:ss[.fffffff]"
+ * format (eg. "00:24:02.2424" or "30.00:00:00") to milliseconds. The day-prefix is
+ * optional and only present on longer TimeSpan values, such as the plugin update settings.
  */
 export const convertTimeSpanToMs = (timeSpan: string) => {
-  const [duration, durationMs] = timeSpan.split('.');
-  const [hours, minutes, seconds] = duration.split(':');
-  return (((toNumber(hours) * 3600) + (toNumber(minutes) * 60) + toNumber(seconds)) * 1000)
-    + toNumber((durationMs ?? '0').slice(0, 3));
+  const [hourSegment, minutes, secondSegment] = timeSpan.split(':');
+  const [days, hours] = hourSegment.includes('.') ? hourSegment.split('.') : ['0', hourSegment];
+  const [seconds, durationMs] = secondSegment.includes('.') ? secondSegment.split('.') : [secondSegment, '0'];
+
+  return (toNumber(days) * 86400 * 1000)
+    + (((toNumber(hours) * 3600) + (toNumber(minutes) * 60) + toNumber(seconds)) * 1000)
+    + toNumber(durationMs.slice(0, 3));
 };
+
+/**
+ * To convert milliseconds to a TimeSpan string in the "d.hh:mm:ss" format
+ * expected by the API for the plugin update settings.
+ */
+export const convertMsToTimeSpan = (milliseconds: number) => dayjs.duration(milliseconds).format('D.HH:mm:ss');
 
 export const padNumber = (num: number | string, size = 2) => num.toString().padStart(size, '0');
 
